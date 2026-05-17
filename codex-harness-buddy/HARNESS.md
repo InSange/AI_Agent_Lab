@@ -479,6 +479,14 @@ TBD
 ```text
 2026-05-18
 - 작업자: Codex
+- 요청: Buddy 개발 브랜치 분리 후 재개 지점 기록
+- 변경 파일: HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색, git status --short --branch
+- 결과: 완료
+- 남은 이슈: 없음
+
+2026-05-18
+- 작업자: Codex
 - 요청: 프로젝트 운영 규칙을 HARNESS.md에 정리하고 Git 저장 준비
 - 변경 파일: HARNESS.md
 - 실행한 검증: python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색, git log --oneline -n 5
@@ -1084,4 +1092,7 @@ TBD
 Codex IDE 네이티브 상주 UI가 아니라, 먼저 Codex가 호출할 수 있는 로컬 CLI 버디로 시작한다.
 공식 Codex `/pet`은 상태 표시 레이어로 두고, Harness Buddy는 프로젝트 하네스를 읽고 행동을 안내하는 CLI 엔진으로 발전시킨다.
 향후 Codex skill/plugin 형태나 별도 UI로 확장할 수 있다.
+현재 개발 브랜치: project/codex-harness-buddy
+main 브랜치는 루트 README와 안정 스냅샷을 유지한다.
+다음 작업 후보: Nudge 반응 수동 확인 항목 추가 또는 캐릭터 반응 지속/복귀 규칙 정리.
 ```
