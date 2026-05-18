@@ -86,7 +86,7 @@ python scripts/character_state_test.py
 python scripts/character_engine_smoke_test.py
 ```
 
-`tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구와 Preview/Check/Nudge 표시 모델을 담당한다. `tools/buddy_character.py`는 이 엔진을 사용해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
+`tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구, 캐릭터 mood와 Preview/Check/Nudge 표시 모델을 담당한다. `mood`는 이후 sprite나 애니메이션을 고를 때 사용할 캐릭터화 하네스다. 현재 캐릭터 UI에는 작은 디버그 라벨로만 표시한다. `tools/buddy_character.py`는 같은 폴더의 엔진 모듈을 import해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
 
 최소 캐릭터 창은 다음 명령으로 실행한다.
 
@@ -226,7 +226,7 @@ python scripts/ui_smoke_test.py
 ## 다음 단계
 
 1. 상태/반응 엔진과 캐릭터 표현 레이어를 분리한다.
-   - 상태별 얼굴, 라벨, 반응 문구와 view model 생성 로직을 UI 코드에서 떼어낸다.
+   - 상태별 얼굴, 라벨, 반응 문구, mood와 view model 생성 로직을 UI 코드에서 떼어낸다.
    - `tkinter` 창 생성, 버튼 배치, subprocess 실행은 기존 UI 파일에 남긴다.
    - 기존 캐릭터 UI 동작은 바꾸지 않고 smoke test로 동일성을 확인한다.
 2. 현재 버튼 UI는 개발/검증용 패널로 유지하고, 최종 캐릭터 UI에서는 숨기거나 축소하는 방향으로 설계한다.

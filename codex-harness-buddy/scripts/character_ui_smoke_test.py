@@ -97,6 +97,10 @@ def main() -> int:
         print("character ui smoke test 실패: 항상 위 토글 라벨이 예상과 다릅니다.")
         return 1
 
+    if getattr(module, "MOOD_LABEL_PREFIX", None) != "mood: ":
+        print("character ui smoke test 실패: mood 라벨 접두어가 예상과 다릅니다.")
+        return 1
+
     if getattr(module, "REFRESH_BUTTON_LABEL", None) != "Refresh":
         print("character ui smoke test 실패: 새로고침 버튼 라벨이 예상과 다릅니다.")
         return 1
@@ -131,15 +135,15 @@ def main() -> int:
         return 1
 
     expected_nudge_reaction_rules = (
-        (("빨리", "대충"), "(^.^)", "빠르게", "빠른 흐름으로 맞춰볼게요."),
-        (("조심", "불안"), "(-.-)", "신중하게", "조심해서 살펴볼게요."),
-        (("검증", "테스트", "되는지"), "(o_o)", "검증 준비", "검증 쪽으로 확인해볼게요."),
+        (("빨리", "대충"), "(^.^)", "빠르게", "빠른 흐름으로 맞춰볼게요.", "energetic"),
+        (("조심", "불안"), "(-.-)", "신중하게", "조심해서 살펴볼게요.", "focused"),
+        (("검증", "테스트", "되는지"), "(o_o)", "검증 준비", "검증 쪽으로 확인해볼게요.", "working"),
     )
     if getattr(module, "NUDGE_REACTION_RULES", None) != expected_nudge_reaction_rules:
         print("character ui smoke test 실패: Nudge 반응 규칙이 예상과 다릅니다.")
         return 1
 
-    if getattr(module, "NUDGE_DEFAULT_REACTION", None) != ("(._.)", "해석 중", "무슨 뜻인지 살펴보고 있어요."):
+    if getattr(module, "NUDGE_DEFAULT_REACTION", None) != ("(._.)", "해석 중", "무슨 뜻인지 살펴보고 있어요.", "curious"):
         print("character ui smoke test 실패: Nudge 기본 반응이 예상과 다릅니다.")
         return 1
 
@@ -153,6 +157,10 @@ def main() -> int:
 
     if module.refresh_time_label("2026-05-16 14:32:10") != "마지막 갱신: 2026-05-16 14:32:10":
         print("character ui smoke test 실패: 갱신 시각 라벨이 예상과 다릅니다.")
+        return 1
+
+    if module.mood_label("calm") != "mood: calm":
+        print("character ui smoke test 실패: mood 라벨 표시가 예상과 다릅니다.")
         return 1
 
     if len(module.current_refresh_time()) != 19:
@@ -384,6 +392,10 @@ def main() -> int:
         print("character ui smoke test 실패: CharacterApp.refresh_state 메서드가 없습니다.")
         return 1
 
+    if "mood_var" not in module.CharacterApp.__init__.__code__.co_names:
+        print("character ui smoke test 실패: CharacterApp mood 표시 변수가 없습니다.")
+        return 1
+
     if not hasattr(module.CharacterApp, "run_check"):
         print("character ui smoke test 실패: CharacterApp.run_check 메서드가 없습니다.")
         return 1
@@ -490,6 +502,7 @@ def main() -> int:
         "label": "검증 중",
         "reaction": "검증을 돌리고 있어요.",
         "message": "잠시만 기다려 주세요.",
+        "mood": "working",
     }
     if check_running_model != expected_check_running_model:
         print("character ui smoke test 실패: Check 실행 중 표시 모델이 예상과 다릅니다.")

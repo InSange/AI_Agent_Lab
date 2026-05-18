@@ -51,6 +51,7 @@ NUDGE_GROUP_LABEL = "Nudge"
 PREVIEW_GROUP_LABEL = "Preview 확인"
 PREVIEW_HELP_LABEL = "표시만 바뀜 · Refresh로 복귀"
 ALWAYS_ON_TOP_LABEL = "항상 위"
+MOOD_LABEL_PREFIX = "mood: "
 CHECK_RUNNING_MESSAGE = "검증 실행 중..."
 CHECK_SUCCESS_MESSAGE = "검증 성공. 상태를 갱신했습니다."
 CHECK_FAILURE_MESSAGE = "검증 실행에 실패했습니다."
@@ -156,6 +157,10 @@ def refresh_time_label(refresh_time: str) -> str:
     return f"마지막 갱신: {refresh_time}"
 
 
+def mood_label(mood: str) -> str:
+    return f"{MOOD_LABEL_PREFIX}{mood}"
+
+
 def load_state_snapshot() -> dict[str, object]:
     result = subprocess.run(
         build_state_command(),
@@ -241,6 +246,7 @@ class CharacterApp:
 
         self.face_var = tk.StringVar()
         self.label_var = tk.StringVar()
+        self.mood_var = tk.StringVar()
         self.reaction_var = tk.StringVar()
         self.message_var = tk.StringVar()
         self.result_var = tk.StringVar()
@@ -261,6 +267,7 @@ class CharacterApp:
 
         tk.Label(root, textvariable=self.face_var, font=("Consolas", 28)).pack(pady=(6, 4))
         tk.Label(root, textvariable=self.label_var, font=("Segoe UI", 12, "bold")).pack()
+        tk.Label(root, textvariable=self.mood_var, font=("Segoe UI", 8)).pack(pady=(1, 0))
         tk.Label(root, textvariable=self.reaction_var, font=("Segoe UI", 9), wraplength=360).pack(pady=(4, 0))
         tk.Label(root, textvariable=self.message_var, wraplength=320).pack(pady=(4, 4))
         tk.Label(
@@ -328,6 +335,7 @@ class CharacterApp:
     def apply_view_model(self, view_model: dict[str, str]) -> None:
         self.face_var.set(view_model["face"])
         self.label_var.set(view_model["label"])
+        self.mood_var.set(mood_label(view_model.get("mood", "unknown")))
         self.reaction_var.set(view_model["reaction"])
         self.message_var.set(view_model["message"])
 
