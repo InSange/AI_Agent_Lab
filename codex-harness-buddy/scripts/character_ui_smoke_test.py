@@ -412,6 +412,22 @@ def main() -> int:
         print("character ui smoke test 실패: Check 실행 중 상태 메시지가 예상과 다릅니다.")
         return 1
 
+    if getattr(module, "REACTION_MIN_DISPLAY_MS", None) != 800:
+        print("character ui smoke test 실패: 반응 최소 표시 시간이 예상과 다릅니다.")
+        return 1
+
+    if module.remaining_display_ms(started_at_ms=1000, now_ms=1000) != 800:
+        print("character ui smoke test 실패: 반응 표시 시작 직후 남은 시간이 예상과 다릅니다.")
+        return 1
+
+    if module.remaining_display_ms(started_at_ms=1000, now_ms=1500) != 300:
+        print("character ui smoke test 실패: 반응 표시 중 남은 시간이 예상과 다릅니다.")
+        return 1
+
+    if module.remaining_display_ms(started_at_ms=1000, now_ms=1800) != 0:
+        print("character ui smoke test 실패: 반응 최소 표시 시간이 지난 뒤 남은 시간이 예상과 다릅니다.")
+        return 1
+
     if getattr(module, "CHECK_SUCCESS_MESSAGE", None) != "검증 성공. 상태를 갱신했습니다.":
         print("character ui smoke test 실패: Check 성공 메시지가 예상과 다릅니다.")
         return 1

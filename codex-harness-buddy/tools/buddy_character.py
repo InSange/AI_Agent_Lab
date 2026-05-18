@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 import tkinter as tk
 
 
@@ -31,6 +32,7 @@ CHECK_RUNNING_FACE = "(o_o)"
 CHECK_RUNNING_LABEL = "검증 중"
 CHECK_RUNNING_REACTION = "검증을 돌리고 있어요."
 CHECK_RUNNING_STATUS_MESSAGE = "잠시만 기다려 주세요."
+REACTION_MIN_DISPLAY_MS = 800
 
 ACTION_BUTTON_COMMANDS = {
     "Status": ["status"],
@@ -157,6 +159,15 @@ def character_reaction(state: str) -> str:
 
 def current_refresh_time() -> str:
     return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def current_millis() -> int:
+    return int(time.monotonic() * 1000)
+
+
+def remaining_display_ms(started_at_ms: int, now_ms: int) -> int:
+    elapsed_ms = max(0, now_ms - started_at_ms)
+    return max(0, REACTION_MIN_DISPLAY_MS - elapsed_ms)
 
 
 def refresh_time_label(refresh_time: str) -> str:
@@ -302,6 +313,8 @@ class CharacterApp:
         self.refresh_time_var = tk.StringVar()
         self.always_on_top_var = tk.BooleanVar(value=False)
         self.action_buttons: list[tk.Button] = []
+        self.nudge_reaction_started_at_ms = 0
+        self.check_reaction_started_at_ms = 0
 
         option_frame = tk.Frame(root)
         option_frame.pack(fill="x", padx=10, pady=(8, 0))
@@ -424,6 +437,7 @@ class CharacterApp:
         if not user_input:
             self.set_result_message("Nudge 입력이 비어 있습니다.")
             return
+        self.nudge_reaction_started_at_ms = current_millis()
         self.apply_view_model(build_nudge_reaction_view_model(user_input))
         self.refresh_time_var.set(refresh_time_label(current_refresh_time()))
         self.start_worker(NUDGE_BUTTON_LABEL, ["nudge", user_input])
@@ -440,7 +454,10 @@ class CharacterApp:
 
     def run_action_worker(self, label: str, args: list[str]) -> None:
         returncode, output = run_buddy_command(args)
-        self.root.after(0, lambda: self.finish_action(label, returncode, output))
+        delay_ms = 0
+        if label == NUDGE_BUTTON_LABEL:
+            delay_ms = remaining_display_ms(self.nudge_reaction_started_at_ms, current_millis())
+        self.root.after(delay_ms, lambda: self.finish_action(label, returncode, output))
 
     def finish_action(self, label: str, returncode: int, output: str) -> None:
         summary = summarize_action_output(label, output)
@@ -460,6 +477,7 @@ class CharacterApp:
         self.set_check_enabled(False)
         self.set_refresh_enabled(False)
         self.set_action_enabled(False)
+        self.check_reaction_started_at_ms = current_millis()
         self.apply_view_model(build_check_running_view_model())
         self.refresh_time_var.set(refresh_time_label(current_refresh_time()))
         self.set_result_message(CHECK_RUNNING_MESSAGE)
@@ -471,7 +489,8 @@ class CharacterApp:
 
     def run_check_worker(self) -> None:
         returncode = run_buddy_check()
-        self.root.after(0, lambda: self.finish_check(returncode))
+        delay_ms = remaining_display_ms(self.check_reaction_started_at_ms, current_millis())
+        self.root.after(delay_ms, lambda: self.finish_check(returncode))
 
     def finish_check(self, returncode: int) -> None:
         if returncode != 0:
