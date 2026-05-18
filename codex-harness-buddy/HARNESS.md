@@ -250,7 +250,7 @@ python scripts/check.py
 현재 전체 검증은 CLI 기본 실행, smoke test, UI smoke test, character UI smoke test를 실행한다.
 성공 시 `검증 요약` 섹션에서 각 단계가 무엇을 확인했는지 짧게 출력한다.
 `선택 검증` 섹션에는 nudge 평가, 캐릭터 UI 수동 확인, 기존 UI 수동 확인 명령을 프로젝트 폴더 기준과 루트 폴더 기준으로 나눠 표시한다.
-`수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나눠 출력한다. 각 그룹에는 Review 후 Nudge 입력창 표시, 예시 입력 버튼 의미, Check 실행 중 얼굴과 라벨의 `검증 중` 변경 확인, 예시 입력 후 Nudge 결과 표시, Nudge 입력에 따른 `빠르게`/`신중하게`/`검증 준비` 라벨 변경 확인, `항상 위` 체크/해제 시 창 z축 동작 확인, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구 변경 확인, Preview 확인 후 `Refresh`로 실제 상태 복귀, Preview 안내 문구 확인 항목을 배치한다.
+`수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나눠 출력한다. 각 그룹에는 Review 후 Nudge 입력창 표시, 예시 입력 버튼 의미, Check 실행 중 얼굴과 라벨의 `검증 중` 변경 확인, 예시 입력 후 Nudge 결과 표시, Nudge 입력에 따른 `빠르게`/`신중하게`/`검증 준비` 라벨 변경 확인, Nudge/Check 반응 라벨 최소 표시 체감 확인, `항상 위` 체크/해제 시 창 z축 동작 확인, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구 변경 확인, Preview 확인 후 `Refresh`로 실제 상태 복귀, Preview 안내 문구 확인 항목을 배치한다.
 `evaluate-nudge`는 아직 전체 검증에 포함하지 않고 별도 실행 대상으로 안내한다.
 
 ### 캐릭터 상태 하네스
@@ -477,6 +477,14 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-18
+- 작업자: Codex
+- 요청: 반응 최소 표시 수동 확인 항목 추가
+- 변경 파일: scripts/check.py, scripts/smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 실제 반응 최소 표시 체감은 사용자 환경에서 수동 확인
+
 2026-05-18
 - 작업자: Codex
 - 요청: 캐릭터 반응 최소 표시 시간 추가

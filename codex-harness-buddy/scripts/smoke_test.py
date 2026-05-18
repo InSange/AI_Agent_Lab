@@ -316,6 +316,7 @@ def check_buddy_check_command() -> bool:
         "- 캐릭터 UI: Check 실행 중 얼굴과 라벨이 검증 중으로 바뀌는지",
         "- 캐릭터 UI: 예시 입력 후 Nudge 실행 결과가 표시되는지",
         "- 캐릭터 UI: Nudge 입력에 따라 빠르게/신중하게/검증 준비 라벨이 바뀌는지",
+        "- 캐릭터 UI: Nudge/Check 반응 라벨이 너무 빨리 사라지지 않는지",
         "- 캐릭터 UI: 항상 위 체크/해제 시 창 z축 동작이 바뀌는지",
         "[Preview]",
         "- 캐릭터 UI: Waiting/Needs Review 프리뷰에서 얼굴, 라벨, 반응 문구가 바뀌는지",

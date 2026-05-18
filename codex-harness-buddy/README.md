@@ -44,7 +44,7 @@ python codex-harness-buddy\scripts\check.py
 
 `check.py`는 CLI, smoke test, UI smoke test, character UI smoke test를 실행한 뒤 무엇을 확인했는지 짧은 검증 요약을 출력한다.
 요약에는 선택 검증 명령과 캐릭터 UI 수동 확인 명령도 프로젝트 폴더 기준과 루트 폴더 기준으로 나눠 표시된다.
-성공 출력의 `수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나뉜다. 각 그룹은 캐릭터 UI에서 Review 후 Nudge 입력창이 보이는지, Check 실행 중 얼굴과 라벨이 `검증 중`으로 바뀌는지, Nudge 입력에 따라 `빠르게`/`신중하게`/`검증 준비` 라벨이 바뀌는지, 예시 입력과 항상 위 토글이 동작하는지, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구가 바뀌고 `Refresh`로 실제 상태에 돌아오는지 확인하도록 안내한다.
+성공 출력의 `수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나뉜다. 각 그룹은 캐릭터 UI에서 Review 후 Nudge 입력창이 보이는지, Check 실행 중 얼굴과 라벨이 `검증 중`으로 바뀌는지, Nudge 입력에 따라 `빠르게`/`신중하게`/`검증 준비` 라벨이 바뀌는지, Nudge/Check 반응 라벨이 너무 빨리 사라지지 않는지, 예시 입력과 항상 위 토글이 동작하는지, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구가 바뀌고 `Refresh`로 실제 상태에 돌아오는지 확인하도록 안내한다.
 
 Buddy CLI에서도 검증 파이프라인을 실행할 수 있다.
 
