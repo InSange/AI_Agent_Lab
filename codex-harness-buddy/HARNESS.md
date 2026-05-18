@@ -281,6 +281,7 @@ Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `항상 위` 토글은 `tkinter`의 `-topmost` 속성을 켜고 끈다. 기본값은 꺼짐이다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
+`확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview 수동 확인 항목을 UI용 짧은 요약으로 표시한다.
 `Nudge` 버튼은 입력 직후 UI 전용 키워드 규칙으로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `빨리`/`대충` 계열은 `빠르게`, `조심`/`불안` 계열은 `신중하게`, `검증`/`테스트`/`되는지` 계열은 `검증 준비`로 표시한다. 이 반응은 화면 피드백이며 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다. Nudge 반응은 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
 결과 문구 영역은 고정 높이를 사용해 긴 결과가 Nudge 입력 영역을 밀어내지 않게 한다.
 `예시 입력` 영역의 Nudge 예시 버튼은 입력창에 예시 문장만 채우며 자동 실행하지 않는다. 실제 해석은 사용자가 `Nudge` 버튼을 눌렀을 때 실행한다.
@@ -480,6 +481,14 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-18
+- 작업자: Codex
+- 요청: 캐릭터 UI에서 수동 확인 안내 버튼 추가
+- 변경 파일: tools/buddy_character.py, scripts/character_ui_smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\character_ui_smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: Git 저장은 별도 승인 필요
+
 2026-05-18
 - 작업자: Codex
 - 요청: 수동 확인 안내 명령 추가

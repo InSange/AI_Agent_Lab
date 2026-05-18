@@ -39,6 +39,7 @@ ACTION_BUTTON_COMMANDS = {
     "Review": ["review"],
     "Fast": ["prompt", "fast"],
     "Careful": ["prompt", "careful"],
+    "확인 항목": ["manual-check"],
 }
 
 NUDGE_EXAMPLES = {
@@ -100,6 +101,13 @@ ACTION_SUMMARY_PREFIXES = {
         "감지된 의도:",
     ),
 }
+
+MANUAL_CHECK_SUMMARY = "\n".join(
+    [
+        "Nudge: 빠르게/신중하게/검증 준비",
+        "Check/Preview: 검증 중 표시와 Refresh 복귀",
+    ]
+)
 
 CHARACTER_FACES = {
     "ready": "(^_^)",
@@ -245,6 +253,8 @@ def truncate_summary_line(summary: str) -> str:
 
 
 def summarize_action_output(label: str, output: str) -> str:
+    if label == "확인 항목":
+        return MANUAL_CHECK_SUMMARY
     return "\n".join(summarize_output_lines(output, ACTION_SUMMARY_PREFIXES.get(label, SUMMARY_PREFIXES), limit=2))
 
 

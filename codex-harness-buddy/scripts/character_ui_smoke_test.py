@@ -109,6 +109,7 @@ def main() -> int:
         "Review": ["review"],
         "Fast": ["prompt", "fast"],
         "Careful": ["prompt", "careful"],
+        "확인 항목": ["manual-check"],
     }
     if getattr(module, "ACTION_BUTTON_COMMANDS", None) != expected_action_commands:
         print("character ui smoke test 실패: 캐릭터 조작 버튼 명령이 예상과 다릅니다.")
@@ -294,6 +295,28 @@ def main() -> int:
     )
     if module.summarize_action_output("Nudge", nudge_output) != expected_nudge_summary:
         print("character ui smoke test 실패: Nudge 버튼 요약이 예상과 다릅니다.")
+        return 1
+
+    manual_check_output = "\n".join(
+        [
+            "Codex Harness Buddy - manual-check",
+            "Nudge 확인:",
+            "- 빨리 해줘 -> 빠르게",
+            "- 조심해서 해줘 -> 신중하게",
+            "Check 확인:",
+            "- Check 클릭 시 검증 중 라벨이 최소 0.8초 보이는지",
+            "Preview 확인:",
+            "- Waiting/Needs Review 버튼 후 Refresh로 실제 상태에 돌아오는지",
+        ]
+    )
+    expected_manual_check_summary = "\n".join(
+        [
+            "Nudge: 빠르게/신중하게/검증 준비",
+            "Check/Preview: 검증 중 표시와 Refresh 복귀",
+        ]
+    )
+    if module.summarize_action_output("확인 항목", manual_check_output) != expected_manual_check_summary:
+        print("character ui smoke test 실패: 확인 항목 버튼 요약이 예상과 다릅니다.")
         return 1
 
     for state, expected_face in EXPECTED_FACES.items():
