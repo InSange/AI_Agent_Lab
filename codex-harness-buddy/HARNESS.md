@@ -141,6 +141,7 @@ python tools/harness_buddy.py review
 python tools/harness_buddy.py check
 python tools/harness_buddy.py status
 python tools/harness_buddy.py state-json
+python tools/harness_buddy.py manual-check
 python tools/harness_buddy.py prompt fast
 python tools/harness_buddy.py prompt careful
 python tools/harness_buddy.py prompt review
@@ -149,6 +150,8 @@ python tools/harness_buddy.py nudge "빨리 좀 해"
 ```
 
 `help` 명령은 프로젝트 폴더 기준 명령과 루트 폴더 기준 명령을 나눠 안내하고, 보통 먼저 실행할 check 명령도 위치별로 표시한다.
+
+`manual-check` 명령은 전체 검증을 실행하지 않고 캐릭터 UI 실행 명령, Nudge 예시, Check 실행 중 표시, Preview 복귀 확인 항목만 출력한다.
 
 `state-json` 명령은 캐릭터 UI가 읽을 수 있는 상태 스냅샷을 JSON으로 출력한다.
 
@@ -477,6 +480,14 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-18
+- 작업자: Codex
+- 요청: 수동 확인 안내 명령 추가
+- 변경 파일: tools/harness_buddy.py, scripts/smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\tools\harness_buddy.py manual-check, python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
 2026-05-18
 - 작업자: Codex
 - 요청: 반응 최소 표시 수동 확인 항목 추가

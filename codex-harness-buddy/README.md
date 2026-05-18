@@ -35,6 +35,13 @@ python tools/harness_buddy.py help
 ```
 
 도움말은 프로젝트 폴더 기준 명령과 루트 폴더 기준 명령을 나눠 보여주고, 보통 먼저 실행할 check 명령도 위치별로 안내한다.
+캐릭터 UI에서 무엇을 직접 눌러 확인해야 하는지만 보고 싶을 때는 다음 명령을 실행한다.
+
+```powershell
+python tools/harness_buddy.py manual-check
+```
+
+`manual-check`는 전체 검증을 실행하지 않고 캐릭터 UI 실행 명령, Nudge 예시, Check 실행 중 표시, Preview 복귀 확인 항목만 출력한다.
 
 루트 작업 폴더에서는 다음 명령으로 전체 최소 검증을 실행한다.
 

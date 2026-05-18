@@ -253,15 +253,19 @@ def check_help_command() -> bool:
         "  nudge 분류 평가 실행",
         "- python tools/harness_buddy.py state-json",
         "  캐릭터 UI용 상태 JSON 출력",
+        "- python tools/harness_buddy.py manual-check",
+        "  캐릭터 UI 수동 확인 안내",
         "프로젝트 폴더에서:",
         "python tools/harness_buddy.py check",
         "python tools/harness_buddy.py evaluate-nudge",
         "python tools/harness_buddy.py state-json",
+        "python tools/harness_buddy.py manual-check",
         "python scripts/check.py",
         "루트 폴더에서:",
         "python codex-harness-buddy\\tools\\harness_buddy.py check",
         "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
         "python codex-harness-buddy\\tools\\harness_buddy.py state-json",
+        "python codex-harness-buddy\\tools\\harness_buddy.py manual-check",
         "python codex-harness-buddy\\scripts\\check.py",
         "보통은 이것부터 실행:",
         "프로젝트 폴더: python scripts/check.py",
@@ -270,6 +274,39 @@ def check_help_command() -> bool:
     missing = [text for text in required_outputs if text not in output_lines]
     if missing:
         print("smoke test 실패: help 명령 필수 출력이 누락되었습니다.")
+        for text in missing:
+            print(f"- {text}")
+        return False
+
+    return True
+
+
+def check_manual_check_command() -> bool:
+    result = run_cli("manual-check")
+
+    if result.returncode != 0:
+        print("smoke test 실패: manual-check 명령이 0이 아닌 종료 코드를 반환했습니다.")
+        print(result.stderr.strip())
+        return False
+
+    output_lines = result.stdout.splitlines()
+    required_outputs = [
+        "Codex Harness Buddy - manual-check",
+        "캐릭터 UI 실행:",
+        "프로젝트 폴더: python tools/buddy_character.py",
+        "루트 폴더: python codex-harness-buddy\\tools\\buddy_character.py",
+        "Nudge 확인:",
+        "- 빨리 해줘 -> 빠르게",
+        "- 조심해서 해줘 -> 신중하게",
+        "- 검증해줘 -> 검증 준비",
+        "Check 확인:",
+        "- Check 클릭 시 검증 중 라벨이 최소 0.8초 보이는지",
+        "Preview 확인:",
+        "- Waiting/Needs Review 버튼 후 Refresh로 실제 상태에 돌아오는지",
+    ]
+    missing = [text for text in required_outputs if text not in output_lines]
+    if missing:
+        print("smoke test 실패: manual-check 명령 필수 출력이 누락되었습니다.")
         for text in missing:
             print(f"- {text}")
         return False
@@ -737,6 +774,7 @@ def main() -> int:
         check_buddy_modes,
         check_prompt_modes,
         check_help_command,
+        check_manual_check_command,
         check_buddy_check_command,
         check_evaluate_nudge_command,
         check_status_command,
