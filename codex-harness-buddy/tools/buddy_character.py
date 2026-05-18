@@ -53,6 +53,7 @@ NUDGE_GROUP_LABEL = "Nudge"
 PREVIEW_GROUP_LABEL = "Preview 확인"
 PREVIEW_HELP_LABEL = "표시만 바뀜 · Refresh로 복귀"
 ALWAYS_ON_TOP_LABEL = "항상 위"
+DEVELOPER_PANEL_LABEL = "개발자 패널"
 MOOD_LABEL_PREFIX = "mood: "
 CHECK_RUNNING_MESSAGE = "검증 실행 중..."
 CHECK_SUCCESS_MESSAGE = "검증 성공. 상태를 갱신했습니다."
@@ -254,6 +255,7 @@ class CharacterApp:
         self.result_var = tk.StringVar()
         self.refresh_time_var = tk.StringVar()
         self.always_on_top_var = tk.BooleanVar(value=False)
+        self.developer_panel_var = tk.BooleanVar(value=True)
         self.action_buttons: list[tk.Button] = []
         self.nudge_reaction_started_at_ms = 0
         self.check_reaction_started_at_ms = 0
@@ -268,6 +270,12 @@ class CharacterApp:
             variable=self.always_on_top_var,
             command=self.toggle_always_on_top,
         ).pack(side="right")
+        tk.Checkbutton(
+            option_frame,
+            text=DEVELOPER_PANEL_LABEL,
+            variable=self.developer_panel_var,
+            command=self.toggle_developer_panel,
+        ).pack(side="right", padx=(0, 8))
 
         tk.Label(root, textvariable=self.face_var, font=("Consolas", 28)).pack(pady=(6, 4))
         tk.Label(root, textvariable=self.label_var, font=("Segoe UI", 12, "bold")).pack()
@@ -283,7 +291,10 @@ class CharacterApp:
         ).pack(fill="x", padx=10, pady=(0, 4))
         tk.Label(root, textvariable=self.refresh_time_var, font=("Segoe UI", 8)).pack(pady=(0, 8))
 
-        button_frame = tk.Frame(root)
+        self.developer_panel_frame = tk.Frame(root)
+        self.developer_panel_frame.pack(fill="x")
+
+        button_frame = tk.Frame(self.developer_panel_frame)
         button_frame.pack(pady=(0, 4))
         tk.Label(button_frame, text=CHECK_GROUP_LABEL, width=8, anchor="w", font=("Segoe UI", 8)).pack(side="left")
         self.check_button = tk.Button(button_frame, text=CHECK_BUTTON_LABEL, command=self.start_check)
@@ -291,7 +302,7 @@ class CharacterApp:
         self.refresh_button = tk.Button(button_frame, text=REFRESH_BUTTON_LABEL, command=self.refresh_state)
         self.refresh_button.pack(side="left", padx=4)
 
-        action_frame = tk.Frame(root)
+        action_frame = tk.Frame(self.developer_panel_frame)
         action_frame.pack(pady=(0, 4))
         tk.Label(action_frame, text=COMMAND_GROUP_LABEL, width=8, anchor="w", font=("Segoe UI", 8)).pack(side="left")
         for label, args in ACTION_BUTTON_COMMANDS.items():
@@ -303,7 +314,7 @@ class CharacterApp:
             button.pack(side="left", padx=3)
             self.action_buttons.append(button)
 
-        nudge_frame = tk.Frame(root)
+        nudge_frame = tk.Frame(self.developer_panel_frame)
         nudge_frame.pack(fill="x", padx=10, pady=(0, 10))
         tk.Label(nudge_frame, text=NUDGE_GROUP_LABEL, width=8, anchor="w", font=("Segoe UI", 8)).pack(side="left")
         self.nudge_entry = tk.Entry(nudge_frame)
@@ -312,7 +323,7 @@ class CharacterApp:
         self.nudge_button.pack(side="left", padx=(6, 0))
         self.action_buttons.append(self.nudge_button)
 
-        example_frame = tk.Frame(root)
+        example_frame = tk.Frame(self.developer_panel_frame)
         example_frame.pack(pady=(0, 10))
         tk.Label(example_frame, text=NUDGE_EXAMPLE_LABEL, font=("Segoe UI", 8)).pack(side="left", padx=(0, 4))
         for label, text in NUDGE_EXAMPLES.items():
@@ -322,7 +333,7 @@ class CharacterApp:
                 command=lambda example_text=text: self.fill_nudge_example(example_text),
             ).pack(side="left", padx=3)
 
-        preview_frame = tk.Frame(root)
+        preview_frame = tk.Frame(self.developer_panel_frame)
         preview_frame.pack(pady=(0, 8))
         tk.Label(preview_frame, text=PREVIEW_GROUP_LABEL, font=("Segoe UI", 8)).pack(side="left", padx=(0, 4))
         tk.Label(preview_frame, text=PREVIEW_HELP_LABEL, font=("Segoe UI", 8)).pack(side="left", padx=(0, 6))
@@ -377,6 +388,12 @@ class CharacterApp:
 
     def toggle_always_on_top(self) -> None:
         self.apply_always_on_top(self.always_on_top_var.get())
+
+    def toggle_developer_panel(self) -> None:
+        if self.developer_panel_var.get():
+            self.developer_panel_frame.pack(fill="x")
+        else:
+            self.developer_panel_frame.pack_forget()
 
     def start_worker(self, label: str, args: list[str]) -> None:
         self.set_check_enabled(False)

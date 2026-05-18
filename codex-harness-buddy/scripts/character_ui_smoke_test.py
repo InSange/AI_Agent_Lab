@@ -97,6 +97,10 @@ def main() -> int:
         print("character ui smoke test 실패: 항상 위 토글 라벨이 예상과 다릅니다.")
         return 1
 
+    if getattr(module, "DEVELOPER_PANEL_LABEL", None) != "개발자 패널":
+        print("character ui smoke test 실패: 개발자 패널 토글 라벨이 예상과 다릅니다.")
+        return 1
+
     if getattr(module, "MOOD_LABEL_PREFIX", None) != "mood: ":
         print("character ui smoke test 실패: mood 라벨 접두어가 예상과 다릅니다.")
         return 1
@@ -408,12 +412,24 @@ def main() -> int:
         print("character ui smoke test 실패: CharacterApp 애니메이션 tick 상태가 없습니다.")
         return 1
 
+    if "developer_panel_var" not in module.CharacterApp.__init__.__code__.co_names:
+        print("character ui smoke test 실패: CharacterApp 개발자 패널 토글 변수가 없습니다.")
+        return 1
+
+    if "developer_panel_frame" not in module.CharacterApp.__init__.__code__.co_names:
+        print("character ui smoke test 실패: CharacterApp 개발자 패널 프레임이 없습니다.")
+        return 1
+
     if not hasattr(module.CharacterApp, "start_animation_loop"):
         print("character ui smoke test 실패: CharacterApp.start_animation_loop 메서드가 없습니다.")
         return 1
 
     if not hasattr(module.CharacterApp, "advance_animation_frame"):
         print("character ui smoke test 실패: CharacterApp.advance_animation_frame 메서드가 없습니다.")
+        return 1
+
+    if not hasattr(module.CharacterApp, "toggle_developer_panel"):
+        print("character ui smoke test 실패: CharacterApp.toggle_developer_panel 메서드가 없습니다.")
         return 1
 
     if not hasattr(module.CharacterApp, "run_check"):

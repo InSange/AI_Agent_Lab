@@ -102,6 +102,7 @@ python tools/buddy_character.py
 Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `Refresh` 버튼은 `state-json`을 다시 읽어 얼굴, 상태 라벨, 메시지, 마지막 갱신 시각을 갱신한다.
 `항상 위` 토글을 켜면 캐릭터 창이 다른 창 위에 머물고, 끄면 일반 창처럼 동작한다.
+`개발자 패널` 토글을 끄면 버튼, Nudge 입력, 예시 입력, Preview 확인 영역을 숨기고 캐릭터 상태 표시만 남긴다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
 `확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview에서 직접 확인할 내용을 짧게 보여준다.
