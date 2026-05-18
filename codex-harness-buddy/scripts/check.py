@@ -10,6 +10,7 @@ CHECKS = [
     ("CLI 실행", [sys.executable, str(PROJECT_ROOT / "tools" / "harness_buddy.py")]),
     ("smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "smoke_test.py")]),
     ("UI smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "ui_smoke_test.py")]),
+    ("character engine smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "character_engine_smoke_test.py")]),
     ("character UI smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "character_ui_smoke_test.py")]),
 ]
 
@@ -17,6 +18,7 @@ CHECK_SUMMARY = [
     "- CLI: 기본 실행과 HARNESS 읽기 확인",
     "- smoke test: 모드, 상태 파일, nudge 규칙 확인",
     "- UI smoke test: 버튼 계약과 UI 헬퍼 확인",
+    "- character engine smoke test: 캐릭터 상태/반응 표시 모델 확인",
     "- character UI smoke test: 캐릭터 창 상태 표시와 조작 버튼 계약 확인",
     "- nudge 평가: 별도 실행 대상",
 ]

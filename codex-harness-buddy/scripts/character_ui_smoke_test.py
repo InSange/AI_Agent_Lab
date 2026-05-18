@@ -34,6 +34,7 @@ def load_character_module():
         raise RuntimeError("buddy_character.py를 import할 수 없습니다.")
 
     module = importlib.util.module_from_spec(spec)
+    # scripts 폴더 밖의 UI 파일을 직접 로드하되, 실행 중 import 캐시는 일반 import와 맞춘다.
     sys.modules["buddy_character"] = module
     spec.loader.exec_module(module)
     return module

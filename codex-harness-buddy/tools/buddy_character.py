@@ -8,6 +8,32 @@ import threading
 import time
 import tkinter as tk
 
+TOOLS_DIR = Path(__file__).resolve().parent
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+from buddy_character_engine import (
+    CHARACTER_FACES,
+    CHARACTER_LABELS,
+    CHARACTER_REACTIONS,
+    CHECK_RUNNING_FACE,
+    CHECK_RUNNING_LABEL,
+    CHECK_RUNNING_REACTION,
+    CHECK_RUNNING_STATUS_MESSAGE,
+    NUDGE_DEFAULT_REACTION,
+    NUDGE_REACTION_MESSAGE,
+    NUDGE_REACTION_RULES,
+    REACTION_MIN_DISPLAY_MS,
+    build_character_view_model,
+    build_check_running_view_model,
+    build_nudge_reaction_view_model,
+    build_preview_view_model,
+    character_face,
+    character_label,
+    character_reaction,
+    remaining_display_ms,
+)
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLI_PATH = PROJECT_ROOT / "tools" / "harness_buddy.py"
@@ -28,11 +54,6 @@ ALWAYS_ON_TOP_LABEL = "항상 위"
 CHECK_RUNNING_MESSAGE = "검증 실행 중..."
 CHECK_SUCCESS_MESSAGE = "검증 성공. 상태를 갱신했습니다."
 CHECK_FAILURE_MESSAGE = "검증 실행에 실패했습니다."
-CHECK_RUNNING_FACE = "(o_o)"
-CHECK_RUNNING_LABEL = "검증 중"
-CHECK_RUNNING_REACTION = "검증을 돌리고 있어요."
-CHECK_RUNNING_STATUS_MESSAGE = "잠시만 기다려 주세요."
-REACTION_MIN_DISPLAY_MS = 800
 
 ACTION_BUTTON_COMMANDS = {
     "Status": ["status"],
@@ -48,14 +69,6 @@ NUDGE_EXAMPLES = {
     "조심": "조심해서 해줘",
     "상태확인": "상태 어때",
 }
-
-NUDGE_REACTION_RULES = (
-    (("빨리", "대충"), "(^.^)", "빠르게", "빠른 흐름으로 맞춰볼게요."),
-    (("조심", "불안"), "(-.-)", "신중하게", "조심해서 살펴볼게요."),
-    (("검증", "테스트", "되는지"), "(o_o)", "검증 준비", "검증 쪽으로 확인해볼게요."),
-)
-NUDGE_DEFAULT_REACTION = ("(._.)", "해석 중", "무슨 뜻인지 살펴보고 있어요.")
-NUDGE_REACTION_MESSAGE = "Nudge 반응입니다. 결과가 오면 요약을 보여줍니다."
 
 PREVIEW_STATES = {
     "Ready": "ready",
@@ -109,28 +122,6 @@ MANUAL_CHECK_SUMMARY = "\n".join(
     ]
 )
 
-CHARACTER_FACES = {
-    "ready": "(^_^)",
-    "stale": "(-_-)",
-    "waiting": "(._.)",
-    "needs_review": "(>_<)",
-}
-
-CHARACTER_LABELS = {
-    "ready": "준비됨",
-    "stale": "검증 오래됨",
-    "waiting": "대기 중",
-    "needs_review": "점검 필요",
-}
-
-CHARACTER_REACTIONS = {
-    "ready": "좋아요. 검증은 최신이에요.",
-    "stale": "검증이 조금 오래됐어요. 한 번 확인해볼까요?",
-    "waiting": "아직 검증 기록을 기다리는 중이에요.",
-    "needs_review": "점검이 필요해요. 실패 로그부터 볼게요.",
-}
-
-
 def build_state_command() -> list[str]:
     return [sys.executable, "harness_buddy.py", "state-json"]
 
@@ -153,29 +144,12 @@ def completed_action_message(label: str, returncode: int) -> str:
     return f"{label} 실패"
 
 
-def character_face(state: str) -> str:
-    return CHARACTER_FACES.get(state, "(?)")
-
-
-def character_label(state: str) -> str:
-    return CHARACTER_LABELS.get(state, "알 수 없음")
-
-
-def character_reaction(state: str) -> str:
-    return CHARACTER_REACTIONS.get(state, "상태를 읽는 중이에요.")
-
-
 def current_refresh_time() -> str:
     return datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def current_millis() -> int:
     return int(time.monotonic() * 1000)
-
-
-def remaining_display_ms(started_at_ms: int, now_ms: int) -> int:
-    elapsed_ms = max(0, now_ms - started_at_ms)
-    return max(0, REACTION_MIN_DISPLAY_MS - elapsed_ms)
 
 
 def refresh_time_label(refresh_time: str) -> str:
@@ -256,56 +230,6 @@ def summarize_action_output(label: str, output: str) -> str:
     if label == "확인 항목":
         return MANUAL_CHECK_SUMMARY
     return "\n".join(summarize_output_lines(output, ACTION_SUMMARY_PREFIXES.get(label, SUMMARY_PREFIXES), limit=2))
-
-
-def build_character_view_model(snapshot: dict[str, object]) -> dict[str, str]:
-    buddy = snapshot.get("buddy", {})
-    if not isinstance(buddy, dict):
-        buddy = {}
-    state = str(buddy.get("state", "waiting"))
-    message = str(buddy.get("message", "상태를 기다리는 중입니다."))
-    return {
-        "face": character_face(state),
-        "label": character_label(state),
-        "reaction": character_reaction(state),
-        "message": message,
-    }
-
-
-def build_preview_view_model(state: str) -> dict[str, str]:
-    return {
-        "face": character_face(state),
-        "label": character_label(state),
-        "reaction": character_reaction(state),
-        "message": "프리뷰 상태입니다. Refresh를 누르면 실제 상태로 돌아갑니다.",
-    }
-
-
-def build_check_running_view_model() -> dict[str, str]:
-    return {
-        "face": CHECK_RUNNING_FACE,
-        "label": CHECK_RUNNING_LABEL,
-        "reaction": CHECK_RUNNING_REACTION,
-        "message": CHECK_RUNNING_STATUS_MESSAGE,
-    }
-
-
-def build_nudge_reaction_view_model(user_input: str) -> dict[str, str]:
-    for keywords, face, label, reaction in NUDGE_REACTION_RULES:
-        if any(keyword in user_input for keyword in keywords):
-            return {
-                "face": face,
-                "label": label,
-                "reaction": reaction,
-                "message": NUDGE_REACTION_MESSAGE,
-            }
-    face, label, reaction = NUDGE_DEFAULT_REACTION
-    return {
-        "face": face,
-        "label": label,
-        "reaction": reaction,
-        "message": NUDGE_REACTION_MESSAGE,
-    }
 
 
 class CharacterApp:

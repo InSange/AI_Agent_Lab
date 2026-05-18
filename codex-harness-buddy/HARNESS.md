@@ -265,6 +265,17 @@ python scripts/character_state_test.py
 현재 캐릭터 상태 하네스는 `state-json`의 `buddy.state` 값을 캐릭터 UI에서 표시할 한국어 라벨로 매핑한다.
 `ready`, `stale`, `waiting`, `needs_review` 상태를 확인한다.
 
+### 캐릭터 엔진 하네스
+
+```powershell
+python scripts/character_engine_smoke_test.py
+```
+
+현재 캐릭터 엔진은 `tools/buddy_character_engine.py`에 있으며 상태별 얼굴/라벨/반응 매핑, `state-json` 스냅샷 view model, Preview view model, Check 실행 중 view model, Nudge 반응 view model, 반응 최소 표시 시간 계산을 담당한다.
+`tools/buddy_character.py`는 `tkinter` 창 생성, 버튼 배치, subprocess 실행, 스레드와 `after` 처리를 담당한다.
+이 하네스는 전체 `scripts/check.py` 파이프라인에도 포함한다.
+현재 `tools` 폴더는 Python 패키지로 만들지 않았기 때문에 일부 IDE의 정의 탐색은 import된 엔진 함수에서 실제 정의 대신 내부 getter로 이동할 수 있다. 실행 안정성은 smoke test로 확인하고, IDE 탐색 개선은 이후 별도 승인 후 `tools/__init__.py` 추가와 명시적 패키지 import 전환으로 검토한다.
+
 ### 최소 캐릭터 UI
 
 ```powershell
@@ -272,6 +283,11 @@ python tools/buddy_character.py
 ```
 
 초기 캐릭터 UI는 `state-json`을 읽어 ASCII 얼굴, 상태 라벨, 상태 메시지, 마지막 갱신 시각을 작은 `tkinter` 창에 표시한다.
+현재 버튼 UI는 최종 제품 UI가 아니라 개발/검증용 하네스 패널이다. `Check`, `Status`, `Review`, `Fast`, `Careful`, `Nudge`, `Preview`, `확인 항목`은 CLI 계약과 상태/반응 표시를 빠르게 검증하기 위한 임시 조작면이다. 최종 플로팅 캐릭터 단계에서는 이 버튼들을 숨기거나 개발자 패널로 격하한다.
+다음 구현 우선순위는 버튼 추가나 배치 조정보다 상태/반응 엔진과 캐릭터 표현 레이어를 분리하는 것이다.
+다음 코드 단계의 분리 대상은 상태별 얼굴/라벨/반응 매핑, `state-json` 스냅샷을 view model로 바꾸는 함수, Preview view model, Check 실행 중 view model, Nudge 반응 view model이다.
+`tkinter` 창 생성, 버튼 배치, subprocess 실행, 스레드와 `after` 처리는 기존 UI 파일에 남긴다.
+분리 후에도 `python scripts/character_ui_smoke_test.py`와 `python scripts/check.py`가 통과해야 하며, 사용자 눈에 보이는 UI 동작은 바꾸지 않는다.
 상태별 Buddy 반응 문구는 고정 규칙 기반으로 표시한다. 현재는 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다.
 `Preview` 버튼은 상태별 얼굴, 라벨, 반응 문구를 화면에서만 미리 보여준다. 실제 `buddy_state.json`은 수정하지 않으며, `Refresh`를 누르면 실제 상태로 돌아온다. UI에는 `표시만 바뀜 · Refresh로 복귀` 안내를 함께 표시한다.
 캐릭터 창 버튼은 `검증`, `명령`, `Nudge`, `예시 입력`, `Preview 확인` 영역으로 나눠 표시한다.
@@ -481,6 +497,38 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-18
+- 작업자: Codex
+- 요청: 동적 import 주석과 IDE 탐색 한계 문서화
+- 변경 파일: scripts/character_engine_smoke_test.py, scripts/character_ui_smoke_test.py, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\character_engine_smoke_test.py, python codex-harness-buddy\scripts\character_ui_smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
+2026-05-18
+- 작업자: Codex
+- 요청: 캐릭터 엔진 분리 첫 코드 단계
+- 변경 파일: tools/buddy_character_engine.py, tools/buddy_character.py, scripts/character_engine_smoke_test.py, scripts/check.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\character_engine_smoke_test.py, python codex-harness-buddy\scripts\character_ui_smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
+2026-05-18
+- 작업자: Codex
+- 요청: 캐릭터 엔진 분리 설계와 성공 기준 정리
+- 변경 파일: README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
+2026-05-18
+- 작업자: Codex
+- 요청: 버튼 UI를 임시 개발 하네스로 정리하고 다음 우선순위 전환
+- 변경 파일: README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
 2026-05-18
 - 작업자: Codex
 - 요청: 캐릭터 UI에서 수동 확인 안내 버튼 추가

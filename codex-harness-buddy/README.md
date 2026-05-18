@@ -80,12 +80,21 @@ python tools/harness_buddy.py state-json
 python scripts/character_state_test.py
 ```
 
+캐릭터 상태/반응 엔진은 다음 별도 하네스로 확인한다.
+
+```powershell
+python scripts/character_engine_smoke_test.py
+```
+
+`tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구와 Preview/Check/Nudge 표시 모델을 담당한다. `tools/buddy_character.py`는 이 엔진을 사용해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
+
 최소 캐릭터 창은 다음 명령으로 실행한다.
 
 ```powershell
 python tools/buddy_character.py
 ```
 
+현재 캐릭터 창의 버튼 UI는 최종 제품 UI가 아니라 개발/검증용 하네스 패널이다. 각 버튼은 CLI 계약, 상태 표시, nudge 반응, Preview 상태를 빠르게 확인하기 위한 임시 조작면이며, 최종 플로팅 캐릭터 단계에서는 숨기거나 개발자 패널로 격하할 수 있다.
 상태별 Buddy 반응 문구는 고정 규칙 기반이다. 현재는 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다.
 `Preview` 버튼은 상태별 얼굴, 라벨, 반응 문구를 화면에서만 미리 보여준다. 실제 `buddy_state.json`은 수정하지 않으며, `Refresh`를 누르면 실제 상태로 돌아온다. UI에는 `표시만 바뀜 · Refresh로 복귀` 안내를 함께 표시한다.
 캐릭터 창 버튼은 `검증`, `명령`, `Nudge`, `예시 입력`, `Preview 확인` 영역으로 나눠 표시한다.
@@ -216,7 +225,11 @@ python scripts/ui_smoke_test.py
 
 ## 다음 단계
 
-1. UI 수동 확인 후 버튼 배치와 문구를 다듬는다.
-2. Hugging Face 모델 기반 의도 분류는 UI 전후로 별도 승인 후 검토한다.
+1. 상태/반응 엔진과 캐릭터 표현 레이어를 분리한다.
+   - 상태별 얼굴, 라벨, 반응 문구와 view model 생성 로직을 UI 코드에서 떼어낸다.
+   - `tkinter` 창 생성, 버튼 배치, subprocess 실행은 기존 UI 파일에 남긴다.
+   - 기존 캐릭터 UI 동작은 바꾸지 않고 smoke test로 동일성을 확인한다.
+2. 현재 버튼 UI는 개발/검증용 패널로 유지하고, 최종 캐릭터 UI에서는 숨기거나 축소하는 방향으로 설계한다.
+3. Hugging Face 모델 기반 의도 분류는 캐릭터 표현 레이어가 분리된 뒤 별도 승인 후 검토한다.
 
 파일 생성, 코드 작성, 의존성 추가는 사용자 승인 후 진행한다.
