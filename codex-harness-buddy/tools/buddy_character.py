@@ -28,6 +28,7 @@ from buddy_character_engine import (
     build_check_running_view_model,
     build_nudge_reaction_view_model,
     build_preview_view_model,
+    character_frame,
     character_face,
     character_label,
     character_reaction,
@@ -41,6 +42,7 @@ WINDOW_TITLE = "Codex Harness Buddy Character"
 WINDOW_GEOMETRY = "430x455"
 RESULT_WRAP_LENGTH = 380
 RESULT_LABEL_HEIGHT = 3
+ANIMATION_INTERVAL_MS = 900
 REFRESH_BUTTON_LABEL = "Refresh"
 CHECK_BUTTON_LABEL = "Check"
 NUDGE_BUTTON_LABEL = "Nudge"
@@ -255,6 +257,8 @@ class CharacterApp:
         self.action_buttons: list[tk.Button] = []
         self.nudge_reaction_started_at_ms = 0
         self.check_reaction_started_at_ms = 0
+        self.current_mood = "idle"
+        self.animation_tick = 0
 
         option_frame = tk.Frame(root)
         option_frame.pack(fill="x", padx=10, pady=(8, 0))
@@ -331,13 +335,24 @@ class CharacterApp:
 
         self.refresh_state()
         self.apply_always_on_top(False)
+        self.start_animation_loop()
 
     def apply_view_model(self, view_model: dict[str, str]) -> None:
-        self.face_var.set(view_model["face"])
+        self.current_mood = view_model.get("mood", "unknown")
+        self.animation_tick = 0
+        self.face_var.set(character_frame(self.current_mood, self.animation_tick))
         self.label_var.set(view_model["label"])
-        self.mood_var.set(mood_label(view_model.get("mood", "unknown")))
+        self.mood_var.set(mood_label(self.current_mood))
         self.reaction_var.set(view_model["reaction"])
         self.message_var.set(view_model["message"])
+
+    def start_animation_loop(self) -> None:
+        self.root.after(ANIMATION_INTERVAL_MS, self.advance_animation_frame)
+
+    def advance_animation_frame(self) -> None:
+        self.animation_tick += 1
+        self.face_var.set(character_frame(self.current_mood, self.animation_tick))
+        self.start_animation_loop()
 
     def refresh_state(self) -> None:
         self.apply_view_model(build_character_view_model(load_state_snapshot()))

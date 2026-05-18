@@ -86,7 +86,7 @@ python scripts/character_state_test.py
 python scripts/character_engine_smoke_test.py
 ```
 
-`tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구, 캐릭터 mood와 Preview/Check/Nudge 표시 모델을 담당한다. `mood`는 이후 sprite나 애니메이션을 고를 때 사용할 캐릭터화 하네스다. 현재 캐릭터 UI에는 작은 디버그 라벨로만 표시한다. `tools/buddy_character.py`는 같은 폴더의 엔진 모듈을 import해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
+`tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구, 캐릭터 mood, mood별 ASCII frame과 Preview/Check/Nudge 표시 모델을 담당한다. `mood`와 ASCII frame은 이후 sprite나 애니메이션을 고를 때 사용할 캐릭터화 하네스다. 현재 캐릭터 UI에는 작은 디버그 라벨로 mood를 표시하고, 얼굴은 0.9초 간격으로 mood별 ASCII frame을 순환한다. `tools/buddy_character.py`는 같은 폴더의 엔진 모듈을 import해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
 
 최소 캐릭터 창은 다음 명령으로 실행한다.
 

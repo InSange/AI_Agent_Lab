@@ -101,6 +101,10 @@ def main() -> int:
         print("character ui smoke test 실패: mood 라벨 접두어가 예상과 다릅니다.")
         return 1
 
+    if getattr(module, "ANIMATION_INTERVAL_MS", None) != 900:
+        print("character ui smoke test 실패: 애니메이션 간격이 예상과 다릅니다.")
+        return 1
+
     if getattr(module, "REFRESH_BUTTON_LABEL", None) != "Refresh":
         print("character ui smoke test 실패: 새로고침 버튼 라벨이 예상과 다릅니다.")
         return 1
@@ -394,6 +398,22 @@ def main() -> int:
 
     if "mood_var" not in module.CharacterApp.__init__.__code__.co_names:
         print("character ui smoke test 실패: CharacterApp mood 표시 변수가 없습니다.")
+        return 1
+
+    if "current_mood" not in module.CharacterApp.__init__.__code__.co_names:
+        print("character ui smoke test 실패: CharacterApp 현재 mood 상태가 없습니다.")
+        return 1
+
+    if "animation_tick" not in module.CharacterApp.__init__.__code__.co_names:
+        print("character ui smoke test 실패: CharacterApp 애니메이션 tick 상태가 없습니다.")
+        return 1
+
+    if not hasattr(module.CharacterApp, "start_animation_loop"):
+        print("character ui smoke test 실패: CharacterApp.start_animation_loop 메서드가 없습니다.")
+        return 1
+
+    if not hasattr(module.CharacterApp, "advance_animation_frame"):
+        print("character ui smoke test 실패: CharacterApp.advance_animation_frame 메서드가 없습니다.")
         return 1
 
     if not hasattr(module.CharacterApp, "run_check"):

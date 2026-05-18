@@ -42,6 +42,22 @@ def main() -> int:
         print("character engine smoke test 실패: ready mood 매핑이 예상과 다릅니다.")
         return 1
 
+    if module.character_frame("calm", tick=0) != "(^_^)":
+        print("character engine smoke test 실패: calm 첫 프레임이 예상과 다릅니다.")
+        return 1
+
+    if module.character_frame("calm", tick=1) != "(^.^)":
+        print("character engine smoke test 실패: calm 두 번째 프레임이 예상과 다릅니다.")
+        return 1
+
+    if module.character_frame("energetic", tick=3) != "(^o^)":
+        print("character engine smoke test 실패: energetic 프레임 순환이 예상과 다릅니다.")
+        return 1
+
+    if module.character_frame("unknown", tick=0) != "(?)":
+        print("character engine smoke test 실패: 알 수 없는 mood 프레임이 예상과 다릅니다.")
+        return 1
+
     sample_state = {
         "buddy": {
             "state": "ready",

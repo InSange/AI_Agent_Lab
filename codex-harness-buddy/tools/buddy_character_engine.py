@@ -26,6 +26,17 @@ CHARACTER_MOODS = {
     "needs_review": "stressed",
 }
 
+CHARACTER_FRAMES = {
+    "calm": ("(^_^)", "(^.^)"),
+    "sleepy": ("(-_-)", "(-.-)"),
+    "idle": ("(._.)", "(._.)"),
+    "stressed": ("(>_<)", "(>_>)"),
+    "working": ("(o_o)", "(o_o)."),
+    "energetic": ("(^.^)", "(^o^)"),
+    "focused": ("(-.-)", "(-_-)"),
+    "curious": ("(._.)", "(?.?)"),
+}
+
 CHECK_RUNNING_FACE = "(o_o)"
 CHECK_RUNNING_LABEL = "검증 중"
 CHECK_RUNNING_REACTION = "검증을 돌리고 있어요."
@@ -58,6 +69,13 @@ def character_mood(state: str) -> str:
     return CHARACTER_MOODS.get(state, "unknown")
 
 
+def character_frame(mood: str, tick: int = 0) -> str:
+    frames = CHARACTER_FRAMES.get(mood)
+    if not frames:
+        return "(?)"
+    return frames[tick % len(frames)]
+
+
 def remaining_display_ms(started_at_ms: int, now_ms: int) -> int:
     elapsed_ms = max(0, now_ms - started_at_ms)
     return max(0, REACTION_MIN_DISPLAY_MS - elapsed_ms)
@@ -70,7 +88,7 @@ def build_character_view_model(snapshot: dict[str, object]) -> dict[str, str]:
     state = str(buddy.get("state", "waiting"))
     message = str(buddy.get("message", "상태를 기다리는 중입니다."))
     return {
-        "face": character_face(state),
+        "face": character_frame(character_mood(state)),
         "label": character_label(state),
         "reaction": character_reaction(state),
         "message": message,
@@ -80,7 +98,7 @@ def build_character_view_model(snapshot: dict[str, object]) -> dict[str, str]:
 
 def build_preview_view_model(state: str) -> dict[str, str]:
     return {
-        "face": character_face(state),
+        "face": character_frame(character_mood(state)),
         "label": character_label(state),
         "reaction": character_reaction(state),
         "message": "프리뷰 상태입니다. Refresh를 누르면 실제 상태로 돌아갑니다.",
@@ -90,7 +108,7 @@ def build_preview_view_model(state: str) -> dict[str, str]:
 
 def build_check_running_view_model() -> dict[str, str]:
     return {
-        "face": CHECK_RUNNING_FACE,
+        "face": character_frame(CHECK_RUNNING_MOOD),
         "label": CHECK_RUNNING_LABEL,
         "reaction": CHECK_RUNNING_REACTION,
         "message": CHECK_RUNNING_STATUS_MESSAGE,
@@ -99,18 +117,18 @@ def build_check_running_view_model() -> dict[str, str]:
 
 
 def build_nudge_reaction_view_model(user_input: str) -> dict[str, str]:
-    for keywords, face, label, reaction, mood in NUDGE_REACTION_RULES:
+    for keywords, _face, label, reaction, mood in NUDGE_REACTION_RULES:
         if any(keyword in user_input for keyword in keywords):
             return {
-                "face": face,
+                "face": character_frame(mood),
                 "label": label,
                 "reaction": reaction,
                 "message": NUDGE_REACTION_MESSAGE,
                 "mood": mood,
             }
-    face, label, reaction, mood = NUDGE_DEFAULT_REACTION
+    _face, label, reaction, mood = NUDGE_DEFAULT_REACTION
     return {
-        "face": face,
+        "face": character_frame(mood),
         "label": label,
         "reaction": reaction,
         "message": NUDGE_REACTION_MESSAGE,
