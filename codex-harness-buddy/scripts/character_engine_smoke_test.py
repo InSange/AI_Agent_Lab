@@ -84,6 +84,26 @@ def main() -> int:
         print("character engine smoke test 실패: 빠른 Nudge 표시 모델이 예상과 다릅니다.")
         return 1
 
+    nudge_careful_model = module.build_nudge_reaction_view_model("조심해서 해줘")
+    if nudge_careful_model["label"] != "신중하게" or nudge_careful_model["reaction"] != "조심해서 살펴볼게요.":
+        print("character engine smoke test 실패: 신중 Nudge 표시 모델이 예상과 다릅니다.")
+        return 1
+
+    nudge_check_model = module.build_nudge_reaction_view_model("검증해줘")
+    if nudge_check_model["label"] != "검증 준비" or nudge_check_model["reaction"] != "검증 쪽으로 확인해볼게요.":
+        print("character engine smoke test 실패: 검증 Nudge 표시 모델이 예상과 다릅니다.")
+        return 1
+
+    nudge_status_model = module.build_nudge_reaction_view_model("상태 어때")
+    if nudge_status_model["label"] != "상태 확인" or nudge_status_model["reaction"] != "현재 상태를 확인해볼게요.":
+        print("character engine smoke test 실패: 상태 Nudge 표시 모델이 예상과 다릅니다.")
+        return 1
+
+    nudge_review_model = module.build_nudge_reaction_view_model("마무리해도 돼?")
+    if nudge_review_model["label"] != "점검 준비" or nudge_review_model["reaction"] != "마무리 상태를 점검해볼게요.":
+        print("character engine smoke test 실패: review Nudge 표시 모델이 예상과 다릅니다.")
+        return 1
+
     nudge_default_model = module.build_nudge_reaction_view_model("뭐 하지")
     if nudge_default_model["label"] != "해석 중" or nudge_default_model["mood"] != "curious":
         print("character engine smoke test 실패: 기본 Nudge 표시 모델이 예상과 다릅니다.")

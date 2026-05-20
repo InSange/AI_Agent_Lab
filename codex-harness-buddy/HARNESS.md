@@ -195,9 +195,9 @@ Buddy는 루트 `AGENTS.md`의 승인 규칙을 우선한다.
 승인 필요: 파일/폴더 변경, 의존성/가상환경 변경, 모델/데이터 다운로드, Git 작업, 토큰/환경 변수 변경
 ```
 
-`nudge` 명령은 짧은 자연어 입력을 키워드 규칙 기반으로 `fast`, `careful`, `review`, `check`, `status` 의도 중 하나에 매핑하고 다음 명령을 안내한다. `review` 계열 의도는 상태 파일을 함께 확인해 최신/오래됨/실패 상태에 따라 추천을 조정한다.
+`nudge` 명령은 짧은 자연어 입력을 모델 어댑터를 통해 `fast`, `careful`, `review`, `check`, `status` 의도 중 하나에 매핑하고 다음 명령을 안내한다. 현재 어댑터는 키워드 규칙 기반이다. `review` 계열 의도는 상태 파일을 함께 확인해 최신/오래됨/실패 상태에 따라 추천을 조정한다.
 현재 `nudge`는 Hugging Face 모델이나 AI 자연어 처리 모델을 사용하지 않고, 추천 명령을 실제로 실행하지 않는다. 출력에는 `분류 방식: 키워드 규칙`, `모델 사용: 없음`, `실행 여부: 추천만 함`을 표시한다.
-내부 분류 결과는 `NudgeClassification`으로 표현하며, 현재 구현은 `classify_nudge_with_rules()`를 통해 생성한다. 이후 모델 기반 분류를 도입하더라도 출력 계약은 이 결과 객체를 통해 유지한다.
+내부 분류 결과는 `tools/buddy_model_adapter.py`의 `IntentClassification`으로 표현한다. 이후 모델 기반 분류를 도입하더라도 출력 계약은 이 결과 객체를 통해 유지한다.
 초기 규칙은 `빨리`, `대충`, `조심`, `불안`, `마무리`, `믿어도`, `테스트`, `되는지`, `상태`, `어때` 같은 표현을 다룬다.
 
 ### 실패 응답
@@ -250,11 +250,19 @@ smoke test는 `--state-path`로 테스트 전용 상태 파일을 사용해 실�
 python scripts/check.py
 ```
 
-현재 전체 검증은 CLI 기본 실행, smoke test, UI smoke test, character UI smoke test를 실행한다.
+현재 전체 검증은 CLI 기본 실행, smoke test, UI smoke test, model adapter smoke test, character UI smoke test를 실행한다.
 성공 시 `검증 요약` 섹션에서 각 단계가 무엇을 확인했는지 짧게 출력한다.
 `선택 검증` 섹션에는 nudge 평가, 캐릭터 UI 수동 확인, 기존 UI 수동 확인 명령을 프로젝트 폴더 기준과 루트 폴더 기준으로 나눠 표시한다.
 `수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나눠 출력한다. 각 그룹에는 Review 후 Nudge 입력창 표시, 예시 입력 버튼 의미, Check 실행 중 얼굴과 라벨의 `검증 중` 변경 확인, 예시 입력 후 Nudge 결과 표시, Nudge 입력에 따른 `빠르게`/`신중하게`/`검증 준비` 라벨 변경 확인, Nudge/Check 반응 라벨 최소 표시 체감 확인, `항상 위` 체크/해제 시 창 z축 동작 확인, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구 변경 확인, Preview 확인 후 `Refresh`로 실제 상태 복귀, Preview 안내 문구 확인 항목을 배치한다.
 `evaluate-nudge`는 아직 전체 검증에 포함하지 않고 별도 실행 대상으로 안내한다.
+
+### 모델 어댑터 하네스
+
+```powershell
+python scripts/model_adapter_smoke_test.py
+```
+
+`tools/buddy_model_adapter.py`는 미래의 Hugging Face 모델 연결 지점이다. 현재 구현은 표준 라이브러리만 사용하며, 키워드 규칙으로 `fast`, `careful`, `review`, `check`, `status` 의도와 다음 명령을 반환한다. Buddy CLI와 캐릭터 Nudge 반응은 같은 어댑터 결과를 사용한다. 실제 모델 다운로드, 의존성 설치, 모델 추론 연결은 별도 승인 후 진행한다.
 
 ### 캐릭터 상태 하네스
 
@@ -284,6 +292,7 @@ python tools/harness_buddy.py character
 python tools/harness_buddy.py character --character-only
 ```
 
+`character` 명령은 터미널에 실행 모드와 내부 실행 명령을 먼저 안내한 뒤 캐릭터 UI를 띄우는 런처 역할을 한다.
 초기 캐릭터 UI는 `state-json`을 읽어 ASCII 얼굴, 상태 라벨, 상태 메시지, 마지막 갱신 시각을 작은 `tkinter` 창에 표시한다.
 현재 버튼 UI는 최종 제품 UI가 아니라 개발/검증용 하네스 패널이다. `Check`, `Status`, `Review`, `Fast`, `Careful`, `Nudge`, `Preview`, `확인 항목`은 CLI 계약과 상태/반응 표시를 빠르게 검증하기 위한 임시 조작면이다. 최종 플로팅 캐릭터 단계에서는 이 버튼들을 숨기거나 개발자 패널로 격하한다.
 다음 구현 우선순위는 버튼 추가나 배치 조정보다 상태/반응 엔진과 캐릭터 표현 레이어를 분리하는 것이다.
@@ -301,7 +310,7 @@ Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
 `확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview 수동 확인 항목을 UI용 짧은 요약으로 표시한다.
-`Nudge` 버튼은 입력 직후 UI 전용 키워드 규칙으로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `빨리`/`대충` 계열은 `빠르게`, `조심`/`불안` 계열은 `신중하게`, `검증`/`테스트`/`되는지` 계열은 `검증 준비`로 표시한다. 이 반응은 화면 피드백이며 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다. Nudge 반응은 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
+`Nudge` 버튼은 입력 직후 모델 어댑터의 의도 분류 결과로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `fast`는 `빠르게`, `careful`은 `신중하게`, `check`는 `검증 준비`, `status`는 `상태 확인`, `review`는 `점검 준비`로 표시한다. 이 반응은 화면 피드백이며 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다. Nudge 반응은 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
 결과 문구 영역은 고정 높이를 사용해 긴 결과가 Nudge 입력 영역을 밀어내지 않게 한다.
 `예시 입력` 영역의 Nudge 예시 버튼은 입력창에 예시 문장만 채우며 자동 실행하지 않는다. 실제 해석은 사용자가 `Nudge` 버튼을 눌렀을 때 실행한다.
 아직 이미지/sprite, 애니메이션은 구현하지 않는다.
@@ -500,6 +509,30 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-20
+- 작업자: Codex
+- 요청: 캐릭터 Nudge 반응을 모델 어댑터 결과와 연결
+- 변경 파일: tools/buddy_character_engine.py, tools/buddy_character.py, scripts/character_engine_smoke_test.py, scripts/character_ui_smoke_test.py, scripts/check.py, scripts/smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\character_engine_smoke_test.py, python codex-harness-buddy\scripts\character_ui_smoke_test.py, python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 실제 Hugging Face 모델 다운로드, 의존성 설치, 모델 추론 연결은 아직 미진행
+
+2026-05-20
+- 작업자: Codex
+- 요청: 모델 연결 준비용 어댑터 하네스 추가
+- 변경 파일: tools/buddy_model_adapter.py, tools/harness_buddy.py, scripts/model_adapter_smoke_test.py, scripts/check.py, scripts/smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\model_adapter_smoke_test.py, python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 실제 Hugging Face 모델 다운로드, 의존성 설치, 모델 추론 연결은 아직 미진행
+
+2026-05-20
+- 작업자: Codex
+- 요청: 캐릭터 UI 런처 안내 출력 추가
+- 변경 파일: tools/harness_buddy.py, scripts/smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
 2026-05-19
 - 작업자: Codex
 - 요청: Buddy CLI에서 캐릭터 UI 실행 명령 추가

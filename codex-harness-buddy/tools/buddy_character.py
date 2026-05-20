@@ -22,8 +22,8 @@ from buddy_character_engine import (
     CHECK_RUNNING_REACTION,
     CHECK_RUNNING_STATUS_MESSAGE,
     NUDGE_DEFAULT_REACTION,
+    NUDGE_INTENT_REACTIONS,
     NUDGE_REACTION_MESSAGE,
-    NUDGE_REACTION_RULES,
     REACTION_MIN_DISPLAY_MS,
     build_character_view_model,
     build_check_running_view_model,
@@ -122,7 +122,7 @@ ACTION_SUMMARY_PREFIXES = {
 
 MANUAL_CHECK_SUMMARY = "\n".join(
     [
-        "Nudge: 빠르게/신중하게/검증 준비",
+        "Nudge: 빠르게/신중하게/검증 준비/상태 확인/점검 준비",
         "Check/Preview: 검증 중 표시와 Refresh 복귀",
     ]
 )

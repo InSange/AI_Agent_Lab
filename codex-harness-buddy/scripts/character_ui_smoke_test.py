@@ -142,13 +142,15 @@ def main() -> int:
         print("character ui smoke test 실패: Nudge 예시 입력 계약이 예상과 다릅니다.")
         return 1
 
-    expected_nudge_reaction_rules = (
-        (("빨리", "대충"), "(^.^)", "빠르게", "빠른 흐름으로 맞춰볼게요.", "energetic"),
-        (("조심", "불안"), "(-.-)", "신중하게", "조심해서 살펴볼게요.", "focused"),
-        (("검증", "테스트", "되는지"), "(o_o)", "검증 준비", "검증 쪽으로 확인해볼게요.", "working"),
-    )
-    if getattr(module, "NUDGE_REACTION_RULES", None) != expected_nudge_reaction_rules:
-        print("character ui smoke test 실패: Nudge 반응 규칙이 예상과 다릅니다.")
+    expected_nudge_intent_reactions = {
+        "fast": ("빠르게", "빠른 흐름으로 맞춰볼게요.", "energetic"),
+        "careful": ("신중하게", "조심해서 살펴볼게요.", "focused"),
+        "check": ("검증 준비", "검증 쪽으로 확인해볼게요.", "working"),
+        "status": ("상태 확인", "현재 상태를 확인해볼게요.", "curious"),
+        "review": ("점검 준비", "마무리 상태를 점검해볼게요.", "focused"),
+    }
+    if getattr(module, "NUDGE_INTENT_REACTIONS", None) != expected_nudge_intent_reactions:
+        print("character ui smoke test 실패: Nudge 의도별 반응 규칙이 예상과 다릅니다.")
         return 1
 
     if getattr(module, "NUDGE_DEFAULT_REACTION", None) != ("(._.)", "해석 중", "무슨 뜻인지 살펴보고 있어요.", "curious"):
@@ -340,7 +342,7 @@ def main() -> int:
     )
     expected_manual_check_summary = "\n".join(
         [
-            "Nudge: 빠르게/신중하게/검증 준비",
+            "Nudge: 빠르게/신중하게/검증 준비/상태 확인/점검 준비",
             "Check/Preview: 검증 중 표시와 Refresh 복귀",
         ]
     )
@@ -401,6 +403,16 @@ def main() -> int:
     nudge_check_model = module.build_nudge_reaction_view_model("검증해줘")
     if nudge_check_model["label"] != "검증 준비" or nudge_check_model["reaction"] != "검증 쪽으로 확인해볼게요.":
         print("character ui smoke test 실패: 검증 Nudge 반응 표시 모델이 예상과 다릅니다.")
+        return 1
+
+    nudge_status_model = module.build_nudge_reaction_view_model("상태 어때")
+    if nudge_status_model["label"] != "상태 확인" or nudge_status_model["reaction"] != "현재 상태를 확인해볼게요.":
+        print("character ui smoke test 실패: 상태 Nudge 반응 표시 모델이 예상과 다릅니다.")
+        return 1
+
+    nudge_review_model = module.build_nudge_reaction_view_model("마무리해도 돼?")
+    if nudge_review_model["label"] != "점검 준비" or nudge_review_model["reaction"] != "마무리 상태를 점검해볼게요.":
+        print("character ui smoke test 실패: review Nudge 반응 표시 모델이 예상과 다릅니다.")
         return 1
 
     nudge_default_model = module.build_nudge_reaction_view_model("뭐 하지")

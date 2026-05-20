@@ -7,6 +7,12 @@ from pathlib import Path
 import subprocess
 import sys
 
+TOOLS_DIR = Path(__file__).resolve().parent
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+from buddy_model_adapter import IntentClassification, classify_intent
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 HARNESS_PATH = PROJECT_ROOT / "HARNESS.md"
@@ -22,13 +28,7 @@ STATE_PATH = PROJECT_ROOT / "buddy_state.json"
 STALE_AFTER = timedelta(minutes=30)
 
 
-@dataclass(frozen=True)
-class NudgeClassification:
-    intent: str
-    reason: str
-    next_command: str
-    method: str = "키워드 규칙"
-    uses_model: bool = False
+NudgeClassification = IntentClassification
 
 
 def read_code_block_after_heading(text: str, heading: str) -> str | None:
@@ -157,7 +157,22 @@ def build_character_command(character_only: bool = False) -> list[str]:
     return command
 
 
+def build_character_launch_summary(character_only: bool = False) -> list[str]:
+    mode = "character-only" if character_only else "default"
+    command = "python tools/buddy_character.py"
+    if character_only:
+        command += " --character-only"
+
+    return [
+        "Codex Harness Buddy - character",
+        "캐릭터 UI를 실행합니다.",
+        f"모드: {mode}",
+        f"명령: {command}",
+    ]
+
+
 def run_character_ui(character_only: bool = False) -> int:
+    print("\n".join(build_character_launch_summary(character_only)))
     return subprocess.run(build_character_command(character_only)).returncode
 
 
@@ -275,24 +290,7 @@ def load_prompt(mode: str, smoke_command: str) -> list[str]:
 
 
 def classify_nudge_with_rules(user_input: str) -> NudgeClassification:
-    lowered = user_input.lower()
-    rules = [
-        ("check", ["검증", "테스트", "check", "돌려", "되는지", "되는지만"], "검증 실행 요청으로 보임", "python tools/harness_buddy.py check"),
-        ("careful", ["조심", "꼼꼼", "위험", "승인", "careful", "불안", "천천히"], "신중한 작업 요청으로 보임", "python tools/harness_buddy.py prompt careful"),
-        ("review", ["끝", "확인", "리뷰", "review", "됐어", "믿어도", "마무리"], "완료 여부 확인 요청으로 보임", "python tools/harness_buddy.py review"),
-        ("status", ["상태", "status", "어때", "현재"], "상태 확인 요청으로 보임", "python tools/harness_buddy.py status"),
-        ("fast", ["빨리", "급해", "재촉", "닦달", "fast", "대충", "후딱"], "빠른 진행 요청으로 보임", "python tools/harness_buddy.py prompt fast"),
-    ]
-
-    for intent, keywords, reason, next_command in rules:
-        if any(keyword in lowered for keyword in keywords):
-            return NudgeClassification(intent=intent, reason=reason, next_command=next_command)
-
-    return NudgeClassification(
-        intent="review",
-        reason="명확한 의도를 찾지 못해 점검 요청으로 처리함",
-        next_command="python tools/harness_buddy.py review",
-    )
+    return classify_intent(user_input)
 
 
 def classify_nudge(user_input: str) -> NudgeClassification:

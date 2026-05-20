@@ -10,6 +10,7 @@ CHECKS = [
     ("CLI 실행", [sys.executable, str(PROJECT_ROOT / "tools" / "harness_buddy.py")]),
     ("smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "smoke_test.py")]),
     ("UI smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "ui_smoke_test.py")]),
+    ("model adapter smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "model_adapter_smoke_test.py")]),
     ("character engine smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "character_engine_smoke_test.py")]),
     ("character UI smoke test", [sys.executable, str(PROJECT_ROOT / "scripts" / "character_ui_smoke_test.py")]),
 ]
@@ -18,6 +19,7 @@ CHECK_SUMMARY = [
     "- CLI: 기본 실행과 HARNESS 읽기 확인",
     "- smoke test: 모드, 상태 파일, nudge 규칙 확인",
     "- UI smoke test: 버튼 계약과 UI 헬퍼 확인",
+    "- model adapter smoke test: 모델 연결 준비용 의도 분류 어댑터 확인",
     "- character engine smoke test: 캐릭터 상태/반응 표시 모델 확인",
     "- character UI smoke test: 캐릭터 창 상태 표시와 조작 버튼 계약 확인",
     "- nudge 평가: 별도 실행 대상",
@@ -50,7 +52,7 @@ MANUAL_CHECK_GROUPS = [
         [
             "- 캐릭터 UI: Check 실행 중 얼굴과 라벨이 검증 중으로 바뀌는지",
             "- 캐릭터 UI: 예시 입력 후 Nudge 실행 결과가 표시되는지",
-            "- 캐릭터 UI: Nudge 입력에 따라 빠르게/신중하게/검증 준비 라벨이 바뀌는지",
+            "- 캐릭터 UI: Nudge 입력에 따라 빠르게/신중하게/검증 준비/상태 확인/점검 준비 라벨이 바뀌는지",
             "- 캐릭터 UI: mood에 따라 ASCII 얼굴이 살짝 바뀌는지",
             "- 캐릭터 UI: Nudge/Check 반응 라벨이 너무 빨리 사라지지 않는지",
             "- 캐릭터 UI: 항상 위 체크/해제 시 창 z축 동작이 바뀌는지",

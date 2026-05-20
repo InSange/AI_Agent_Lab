@@ -49,7 +49,7 @@ python tools/harness_buddy.py manual-check
 python codex-harness-buddy\scripts\check.py
 ```
 
-`check.py`는 CLI, smoke test, UI smoke test, character UI smoke test를 실행한 뒤 무엇을 확인했는지 짧은 검증 요약을 출력한다.
+`check.py`는 CLI, smoke test, UI smoke test, model adapter smoke test, character UI smoke test를 실행한 뒤 무엇을 확인했는지 짧은 검증 요약을 출력한다.
 요약에는 선택 검증 명령과 캐릭터 UI 수동 확인 명령도 프로젝트 폴더 기준과 루트 폴더 기준으로 나눠 표시된다.
 성공 출력의 `수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나뉜다. 각 그룹은 캐릭터 UI에서 Review 후 Nudge 입력창이 보이는지, Check 실행 중 얼굴과 라벨이 `검증 중`으로 바뀌는지, Nudge 입력에 따라 `빠르게`/`신중하게`/`검증 준비` 라벨이 바뀌는지, Nudge/Check 반응 라벨이 너무 빨리 사라지지 않는지, 예시 입력과 항상 위 토글이 동작하는지, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구가 바뀌고 `Refresh`로 실제 상태에 돌아오는지 확인하도록 안내한다.
 
@@ -88,11 +88,15 @@ python scripts/character_engine_smoke_test.py
 
 `tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구, 캐릭터 mood, mood별 ASCII frame과 Preview/Check/Nudge 표시 모델을 담당한다. `mood`와 ASCII frame은 이후 sprite나 애니메이션을 고를 때 사용할 캐릭터화 하네스다. 현재 캐릭터 UI에는 작은 디버그 라벨로 mood를 표시하고, 얼굴은 0.9초 간격으로 mood별 ASCII frame을 순환한다. `tools/buddy_character.py`는 같은 폴더의 엔진 모듈을 import해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
 
+`tools/buddy_model_adapter.py`는 nudge 의도 분류를 담당하는 모델 연결 준비용 어댑터다. 현재는 표준 라이브러리와 키워드 규칙만 사용하며, Hugging Face 모델이나 추가 의존성은 아직 사용하지 않는다. Buddy CLI와 캐릭터 Nudge 반응은 같은 어댑터 결과를 사용한다.
+
 최소 캐릭터 창은 다음 명령으로 실행한다.
 
 ```powershell
 python tools/harness_buddy.py character
 ```
+
+이 명령은 터미널에 실행 모드와 내부 실행 명령을 먼저 안내한 뒤 캐릭터 UI를 띄운다.
 
 캐릭터만 먼저 보려면 개발자 패널을 숨긴 상태로 실행한다.
 
@@ -112,7 +116,7 @@ Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
 `확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview에서 직접 확인할 내용을 짧게 보여준다.
-`Nudge` 버튼은 입력 직후 키워드 규칙으로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `빨리` 계열은 `빠르게`, `조심` 계열은 `신중하게`, `검증` 계열은 `검증 준비`로 표시한다. 이 반응은 UI 피드백이며 Hugging Face 모델을 사용하지 않는다. Nudge 반응도 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
+`Nudge` 버튼은 입력 직후 모델 어댑터의 의도 분류 결과로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `fast`는 `빠르게`, `careful`은 `신중하게`, `check`는 `검증 준비`, `status`는 `상태 확인`, `review`는 `점검 준비`로 표시한다. 이 반응은 UI 피드백이며 Hugging Face 모델을 사용하지 않는다. Nudge 반응도 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
 결과 문구 영역은 고정 높이를 사용해 긴 결과가 Nudge 입력 영역을 밀어내지 않게 한다.
 `예시 입력` 영역의 Nudge 예시 버튼은 입력창에 예시 문장만 채우며 자동 실행하지 않는다. 실제 해석은 사용자가 `Nudge` 버튼을 눌렀을 때 실행한다.
 
@@ -152,7 +156,7 @@ python tools/harness_buddy.py prompt review
 
 ## 자연어 nudge
 
-터미널에서 짧은 자연어를 입력하면 Buddy가 키워드 규칙으로 의도를 분류하고 다음 명령을 안내한다. `review` 계열 요청은 상태 파일을 함께 확인해 최신/오래됨/실패 상태에 맞춰 추천한다.
+터미널에서 짧은 자연어를 입력하면 Buddy가 모델 어댑터를 통해 의도를 분류하고 다음 명령을 안내한다. 현재 어댑터는 키워드 규칙 기반이며, `review` 계열 요청은 상태 파일을 함께 확인해 최신/오래됨/실패 상태에 맞춰 추천한다.
 현재 `nudge`는 Hugging Face 모델이나 AI 자연어 처리 모델을 사용하지 않으며, 추천 명령을 실제로 실행하지 않는다.
 
 ```powershell
@@ -167,8 +171,8 @@ python tools/harness_buddy.py nudge "테스트 돌려"
 python tools/harness_buddy.py nudge "상태 보여줘"
 ```
 
-초기 버전은 Hugging Face 모델 없이 키워드 규칙으로만 분류한다. 출력에는 `분류 방식: 키워드 규칙`, `모델 사용: 없음`, `실행 여부: 추천만 함`을 표시한다.
-모델 기반 의도 분류는 아직 미구현이며, 도입 기준과 평가 샘플은 `HARNESS.md`에 기록한다.
+초기 버전은 Hugging Face 모델 없이 어댑터 내부의 키워드 규칙으로만 분류한다. 출력에는 `분류 방식: 키워드 규칙`, `모델 사용: 없음`, `실행 여부: 추천만 함`을 표시한다.
+모델 기반 의도 분류는 아직 미구현이며, 도입 기준과 평가 샘플은 `HARNESS.md`에 기록한다. 실제 모델 연결은 이 어댑터의 내부 구현을 교체하는 방식으로 진행한다.
 
 nudge 분류 평가 하네스는 다음 명령으로 별도 실행한다.
 

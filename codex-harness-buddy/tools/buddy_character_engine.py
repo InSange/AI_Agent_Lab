@@ -1,3 +1,13 @@
+from pathlib import Path
+import sys
+
+TOOLS_DIR = Path(__file__).resolve().parent
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+from buddy_model_adapter import IntentClassification, classify_intent
+
+
 CHARACTER_FACES = {
     "ready": "(^_^)",
     "stale": "(-_-)",
@@ -44,11 +54,13 @@ CHECK_RUNNING_STATUS_MESSAGE = "잠시만 기다려 주세요."
 CHECK_RUNNING_MOOD = "working"
 REACTION_MIN_DISPLAY_MS = 800
 
-NUDGE_REACTION_RULES = (
-    (("빨리", "대충"), "(^.^)", "빠르게", "빠른 흐름으로 맞춰볼게요.", "energetic"),
-    (("조심", "불안"), "(-.-)", "신중하게", "조심해서 살펴볼게요.", "focused"),
-    (("검증", "테스트", "되는지"), "(o_o)", "검증 준비", "검증 쪽으로 확인해볼게요.", "working"),
-)
+NUDGE_INTENT_REACTIONS = {
+    "fast": ("빠르게", "빠른 흐름으로 맞춰볼게요.", "energetic"),
+    "careful": ("신중하게", "조심해서 살펴볼게요.", "focused"),
+    "check": ("검증 준비", "검증 쪽으로 확인해볼게요.", "working"),
+    "status": ("상태 확인", "현재 상태를 확인해볼게요.", "curious"),
+    "review": ("점검 준비", "마무리 상태를 점검해볼게요.", "focused"),
+}
 NUDGE_DEFAULT_REACTION = ("(._.)", "해석 중", "무슨 뜻인지 살펴보고 있어요.", "curious")
 NUDGE_REACTION_MESSAGE = "Nudge 반응입니다. 결과가 오면 요약을 보여줍니다."
 
@@ -116,16 +128,17 @@ def build_check_running_view_model() -> dict[str, str]:
     }
 
 
-def build_nudge_reaction_view_model(user_input: str) -> dict[str, str]:
-    for keywords, _face, label, reaction, mood in NUDGE_REACTION_RULES:
-        if any(keyword in user_input for keyword in keywords):
-            return {
-                "face": character_frame(mood),
-                "label": label,
-                "reaction": reaction,
-                "message": NUDGE_REACTION_MESSAGE,
-                "mood": mood,
-            }
+def build_nudge_intent_view_model(classification: IntentClassification) -> dict[str, str]:
+    if not classification.reason.startswith("명확한 의도를 찾지 못해"):
+        label, reaction, mood = NUDGE_INTENT_REACTIONS.get(classification.intent, NUDGE_DEFAULT_REACTION[1:])
+        return {
+            "face": character_frame(mood),
+            "label": label,
+            "reaction": reaction,
+            "message": NUDGE_REACTION_MESSAGE,
+            "mood": mood,
+        }
+
     _face, label, reaction, mood = NUDGE_DEFAULT_REACTION
     return {
         "face": character_frame(mood),
@@ -134,3 +147,7 @@ def build_nudge_reaction_view_model(user_input: str) -> dict[str, str]:
         "message": NUDGE_REACTION_MESSAGE,
         "mood": mood,
     }
+
+
+def build_nudge_reaction_view_model(user_input: str) -> dict[str, str]:
+    return build_nudge_intent_view_model(classify_intent(user_input))
