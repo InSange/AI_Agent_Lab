@@ -187,6 +187,18 @@ def main() -> int:
         print("character ui smoke test 실패: 일반 CLI 명령 생성이 예상과 다릅니다.")
         return 1
 
+    if not hasattr(module, "parse_args"):
+        print("character ui smoke test 실패: 캐릭터 UI 인자 파서가 없습니다.")
+        return 1
+
+    if not module.parse_args(["--character-only"]).character_only:
+        print("character ui smoke test 실패: character-only 옵션이 예상과 다릅니다.")
+        return 1
+
+    if module.parse_args([]).character_only:
+        print("character ui smoke test 실패: 기본 실행의 character-only 값이 예상과 다릅니다.")
+        return 1
+
     if module.running_action_message("Status") != "Status 실행 중...":
         print("character ui smoke test 실패: 조작 실행 중 메시지가 예상과 다릅니다.")
         return 1
@@ -418,6 +430,10 @@ def main() -> int:
 
     if "developer_panel_frame" not in module.CharacterApp.__init__.__code__.co_names:
         print("character ui smoke test 실패: CharacterApp 개발자 패널 프레임이 없습니다.")
+        return 1
+
+    if "character_only" not in module.CharacterApp.__init__.__code__.co_varnames:
+        print("character ui smoke test 실패: CharacterApp character-only 인자가 없습니다.")
         return 1
 
     if not hasattr(module.CharacterApp, "start_animation_loop"):

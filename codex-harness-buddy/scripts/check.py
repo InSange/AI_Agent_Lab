@@ -25,13 +25,13 @@ CHECK_SUMMARY = [
 
 PROJECT_OPTIONAL_CHECKS = [
     "- nudge 평가: python tools/harness_buddy.py evaluate-nudge",
-    "- 캐릭터 UI 수동 확인: python tools/buddy_character.py",
+    "- 캐릭터 UI 수동 확인: python tools/harness_buddy.py character --character-only",
     "- UI 수동 확인: python tools/buddy_ui.py",
 ]
 
 ROOT_OPTIONAL_CHECKS = [
     "- nudge 평가: python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
-    "- 캐릭터 UI 수동 확인: python codex-harness-buddy\\tools\\buddy_character.py",
+    "- 캐릭터 UI 수동 확인: python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
     "- UI 수동 확인: python codex-harness-buddy\\tools\\buddy_ui.py",
 ]
 
@@ -42,6 +42,7 @@ MANUAL_CHECK_GROUPS = [
             "- 캐릭터 UI: Review 후 Nudge 입력창이 보이는지",
             "- 캐릭터 UI: 예시 입력 버튼이 의미 있게 보이는지",
             "- 캐릭터 UI: 개발자 패널 체크 해제 시 버튼/입력/Preview가 숨겨지는지",
+            "- 캐릭터 UI: --character-only 실행 시 개발자 패널이 숨겨진 상태로 시작하는지",
         ],
     ),
     (

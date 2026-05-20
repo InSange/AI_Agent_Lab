@@ -280,7 +280,8 @@ python scripts/character_engine_smoke_test.py
 ### 최소 캐릭터 UI
 
 ```powershell
-python tools/buddy_character.py
+python tools/harness_buddy.py character
+python tools/harness_buddy.py character --character-only
 ```
 
 초기 캐릭터 UI는 `state-json`을 읽어 ASCII 얼굴, 상태 라벨, 상태 메시지, 마지막 갱신 시각을 작은 `tkinter` 창에 표시한다.
@@ -296,7 +297,7 @@ python tools/buddy_character.py
 Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `Refresh` 버튼은 `state-json`을 다시 읽어 표시와 마지막 갱신 시각을 갱신한다.
 `항상 위` 토글은 `tkinter`의 `-topmost` 속성을 켜고 끈다. 기본값은 꺼짐이다.
-`개발자 패널` 토글은 버튼, Nudge 입력, 예시 입력, Preview 확인 영역을 숨기거나 다시 보이게 한다. 기본값은 켜짐이다.
+`개발자 패널` 토글은 버튼, Nudge 입력, 예시 입력, Preview 확인 영역을 숨기거나 다시 보이게 한다. 기본값은 켜짐이며, `--character-only` 옵션은 이 토글이 꺼진 상태로 창을 시작한다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
 `확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview 수동 확인 항목을 UI용 짧은 요약으로 표시한다.
@@ -499,6 +500,22 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-19
+- 작업자: Codex
+- 요청: Buddy CLI에서 캐릭터 UI 실행 명령 추가
+- 변경 파일: tools/harness_buddy.py, scripts/smoke_test.py, scripts/check.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
+2026-05-19
+- 작업자: Codex
+- 요청: 캐릭터 중심 실행 옵션 추가
+- 변경 파일: tools/buddy_character.py, scripts/character_ui_smoke_test.py, scripts/check.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\scripts\character_ui_smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 없음
+
 2026-05-19
 - 작업자: Codex
 - 요청: 캐릭터 UI 개발자 패널 토글 추가

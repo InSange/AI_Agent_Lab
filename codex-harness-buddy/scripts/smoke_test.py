@@ -255,17 +255,21 @@ def check_help_command() -> bool:
         "  캐릭터 UI용 상태 JSON 출력",
         "- python tools/harness_buddy.py manual-check",
         "  캐릭터 UI 수동 확인 안내",
+        "- python tools/harness_buddy.py character --character-only",
+        "  캐릭터 중심 UI 실행",
         "프로젝트 폴더에서:",
         "python tools/harness_buddy.py check",
         "python tools/harness_buddy.py evaluate-nudge",
         "python tools/harness_buddy.py state-json",
         "python tools/harness_buddy.py manual-check",
+        "python tools/harness_buddy.py character --character-only",
         "python scripts/check.py",
         "루트 폴더에서:",
         "python codex-harness-buddy\\tools\\harness_buddy.py check",
         "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
         "python codex-harness-buddy\\tools\\harness_buddy.py state-json",
         "python codex-harness-buddy\\tools\\harness_buddy.py manual-check",
+        "python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
         "python codex-harness-buddy\\scripts\\check.py",
         "보통은 이것부터 실행:",
         "프로젝트 폴더: python scripts/check.py",
@@ -314,6 +318,34 @@ def check_manual_check_command() -> bool:
     return True
 
 
+def check_character_command_contract() -> bool:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("harness_buddy", CLI_PATH)
+    if spec is None or spec.loader is None:
+        print("smoke test 실패: harness_buddy.py를 import할 수 없습니다.")
+        return False
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["harness_buddy"] = module
+    spec.loader.exec_module(module)
+
+    if "character" not in module.COMMANDS:
+        print("smoke test 실패: character 명령이 COMMANDS에 없습니다.")
+        return False
+    if not hasattr(module, "build_character_command"):
+        print("smoke test 실패: build_character_command 함수가 없습니다.")
+        return False
+
+    command = module.build_character_command(character_only=True)
+    expected_tail = ["buddy_character.py", "--character-only"]
+    if Path(command[-2]).name != expected_tail[0] or command[-1] != expected_tail[1]:
+        print("smoke test 실패: character --character-only 전달 명령이 예상과 다릅니다.")
+        print(f"- 실제: {command}")
+        return False
+
+    return True
+
+
 def check_buddy_check_command() -> bool:
     if os.environ.get("HARNESS_BUDDY_SKIP_CHECK_COMMAND_TEST") == "1":
         return True
@@ -338,11 +370,11 @@ def check_buddy_check_command() -> bool:
         "선택 검증",
         "프로젝트 폴더:",
         "- nudge 평가: python tools/harness_buddy.py evaluate-nudge",
-        "- 캐릭터 UI 수동 확인: python tools/buddy_character.py",
+        "- 캐릭터 UI 수동 확인: python tools/harness_buddy.py character --character-only",
         "- UI 수동 확인: python tools/buddy_ui.py",
         "루트 폴더:",
         "- nudge 평가: python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
-        "- 캐릭터 UI 수동 확인: python codex-harness-buddy\\tools\\buddy_character.py",
+        "- 캐릭터 UI 수동 확인: python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
         "- UI 수동 확인: python codex-harness-buddy\\tools\\buddy_ui.py",
         "다음 확인: 캐릭터 창은 필요 시 직접 실행해 버튼과 상태 표시를 확인",
         "수동 확인:",
@@ -775,6 +807,7 @@ def main() -> int:
         check_prompt_modes,
         check_help_command,
         check_manual_check_command,
+        check_character_command_contract,
         check_buddy_check_command,
         check_evaluate_nudge_command,
         check_status_command,

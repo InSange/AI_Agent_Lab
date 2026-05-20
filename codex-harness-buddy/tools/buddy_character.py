@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 from datetime import datetime
 import json
@@ -241,7 +242,7 @@ def summarize_action_output(label: str, output: str) -> str:
 
 
 class CharacterApp:
-    def __init__(self, root: tk.Tk) -> None:
+    def __init__(self, root: tk.Tk, character_only: bool = False) -> None:
         self.root = root
         self.root.title(WINDOW_TITLE)
         self.root.geometry(WINDOW_GEOMETRY)
@@ -255,7 +256,7 @@ class CharacterApp:
         self.result_var = tk.StringVar()
         self.refresh_time_var = tk.StringVar()
         self.always_on_top_var = tk.BooleanVar(value=False)
-        self.developer_panel_var = tk.BooleanVar(value=True)
+        self.developer_panel_var = tk.BooleanVar(value=not character_only)
         self.action_buttons: list[tk.Button] = []
         self.nudge_reaction_started_at_ms = 0
         self.check_reaction_started_at_ms = 0
@@ -346,6 +347,7 @@ class CharacterApp:
 
         self.refresh_state()
         self.apply_always_on_top(False)
+        self.toggle_developer_panel()
         self.start_animation_loop()
 
     def apply_view_model(self, view_model: dict[str, str]) -> None:
@@ -481,9 +483,20 @@ class CharacterApp:
         self.set_action_enabled(True)
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Codex Harness Buddy 캐릭터 UI")
+    parser.add_argument(
+        "--character-only",
+        action="store_true",
+        help="개발자 패널을 숨긴 캐릭터 중심 모드로 시작합니다.",
+    )
+    return parser.parse_args(argv)
+
+
 def main() -> int:
+    args = parse_args()
     root = tk.Tk()
-    CharacterApp(root)
+    CharacterApp(root, character_only=args.character_only)
     root.mainloop()
     return 0
 

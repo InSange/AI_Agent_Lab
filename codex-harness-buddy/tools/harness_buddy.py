@@ -14,9 +14,10 @@ NEXT_ACTION = "최소 CLI 하네스 설계"
 REMAINING_ISSUES = "승인 체크리스트 출력, 상태 파일 저장은 이후 단계에서 구현"
 APPROVAL_REQUIRED = "승인 필요: 파일/폴더 변경, 의존성/가상환경 변경, 모델/데이터 다운로드, Git 작업, 토큰/환경 변수 변경"
 MODES = ["fast", "careful", "review"]
-COMMANDS = [*MODES, "check", "status", "prompt", "nudge", "evaluate-nudge", "state-json", "manual-check", "help"]
+COMMANDS = [*MODES, "check", "status", "prompt", "nudge", "evaluate-nudge", "state-json", "manual-check", "character", "help"]
 CHECK_PATH = PROJECT_ROOT / "scripts" / "check.py"
 EVALUATE_NUDGE_PATH = PROJECT_ROOT / "scripts" / "evaluate_nudge.py"
+CHARACTER_PATH = PROJECT_ROOT / "tools" / "buddy_character.py"
 STATE_PATH = PROJECT_ROOT / "buddy_state.json"
 STALE_AFTER = timedelta(minutes=30)
 
@@ -103,12 +104,15 @@ def load_help_summary() -> list[str]:
         "  캐릭터 UI용 상태 JSON 출력",
         "- python tools/harness_buddy.py manual-check",
         "  캐릭터 UI 수동 확인 안내",
+        "- python tools/harness_buddy.py character --character-only",
+        "  캐릭터 중심 UI 실행",
         "",
         "프로젝트 폴더에서:",
         "python tools/harness_buddy.py check",
         "python tools/harness_buddy.py evaluate-nudge",
         "python tools/harness_buddy.py state-json",
         "python tools/harness_buddy.py manual-check",
+        "python tools/harness_buddy.py character --character-only",
         "python scripts/check.py",
         "",
         "루트 폴더에서:",
@@ -116,6 +120,7 @@ def load_help_summary() -> list[str]:
         "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
         "python codex-harness-buddy\\tools\\harness_buddy.py state-json",
         "python codex-harness-buddy\\tools\\harness_buddy.py manual-check",
+        "python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
         "python codex-harness-buddy\\scripts\\check.py",
         "",
         "보통은 이것부터 실행:",
@@ -143,6 +148,17 @@ def load_manual_check_summary() -> list[str]:
         "Preview 확인:",
         "- Waiting/Needs Review 버튼 후 Refresh로 실제 상태에 돌아오는지",
     ]
+
+
+def build_character_command(character_only: bool = False) -> list[str]:
+    command = [sys.executable, str(CHARACTER_PATH)]
+    if character_only:
+        command.append("--character-only")
+    return command
+
+
+def run_character_ui(character_only: bool = False) -> int:
+    return subprocess.run(build_character_command(character_only)).returncode
 
 
 def get_freshness_label(checked_at: str | None) -> str:
@@ -517,6 +533,11 @@ def parse_args() -> argparse.Namespace:
         default=str(STATE_PATH),
         help="읽고 쓸 buddy_state.json 경로",
     )
+    parser.add_argument(
+        "--character-only",
+        action="store_true",
+        help="character 명령에서 개발자 패널을 숨긴 캐릭터 중심 모드로 시작",
+    )
     args = parser.parse_args()
 
     if args.command == "prompt":
@@ -526,9 +547,14 @@ def parse_args() -> argparse.Namespace:
         if not args.prompt_mode:
             parser.error("nudge 명령에는 자연어 입력이 필요합니다.")
     elif args.command and args.command not in COMMANDS:
-        parser.error("명령은 fast, careful, review, prompt, check, status, nudge, evaluate-nudge, state-json, manual-check, help 중 하나여야 합니다.")
+        parser.error("명령은 fast, careful, review, prompt, check, status, nudge, evaluate-nudge, state-json, manual-check, character, help 중 하나여야 합니다.")
+    elif args.command == "character":
+        if args.prompt_mode:
+            parser.error("character 명령에는 두 번째 위치 인자를 사용할 수 없습니다.")
     elif args.prompt_mode:
         parser.error("두 번째 위치 인자는 prompt 명령에서만 사용할 수 있습니다.")
+    elif args.character_only:
+        parser.error("--character-only 옵션은 character 명령에서만 사용할 수 있습니다.")
 
     return args
 
@@ -545,6 +571,9 @@ def main() -> int:
     if args.command == "manual-check":
         print("\n".join(load_manual_check_summary()))
         return 0
+
+    if args.command == "character":
+        return run_character_ui(args.character_only)
 
     if not harness_path.exists():
         print("HARNESS.md를 찾지 못했습니다.")
