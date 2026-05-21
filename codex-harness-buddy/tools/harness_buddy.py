@@ -11,7 +11,7 @@ TOOLS_DIR = Path(__file__).resolve().parent
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
-from buddy_model_adapter import IntentClassification, classify_intent
+from buddy_model_adapter import IntentClassification, classify_intent, get_model_info
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -20,7 +20,7 @@ NEXT_ACTION = "최소 CLI 하네스 설계"
 REMAINING_ISSUES = "승인 체크리스트 출력, 상태 파일 저장은 이후 단계에서 구현"
 APPROVAL_REQUIRED = "승인 필요: 파일/폴더 변경, 의존성/가상환경 변경, 모델/데이터 다운로드, Git 작업, 토큰/환경 변수 변경"
 MODES = ["fast", "careful", "review"]
-COMMANDS = [*MODES, "check", "status", "prompt", "nudge", "evaluate-nudge", "state-json", "manual-check", "character", "help"]
+COMMANDS = [*MODES, "check", "status", "prompt", "nudge", "evaluate-nudge", "state-json", "manual-check", "character", "model-info", "help"]
 CHECK_PATH = PROJECT_ROOT / "scripts" / "check.py"
 EVALUATE_NUDGE_PATH = PROJECT_ROOT / "scripts" / "evaluate_nudge.py"
 CHARACTER_PATH = PROJECT_ROOT / "tools" / "buddy_character.py"
@@ -100,27 +100,39 @@ def load_help_summary() -> list[str]:
         "  키워드 규칙으로 의도 추천",
         "- python tools/harness_buddy.py evaluate-nudge",
         "  nudge 분류 평가 실행",
+        "- python tools/harness_buddy.py evaluate-nudge --model-provider hf",
+        "  Hugging Face nudge 분류 평가 실행",
         "- python tools/harness_buddy.py state-json",
         "  캐릭터 UI용 상태 JSON 출력",
         "- python tools/harness_buddy.py manual-check",
         "  캐릭터 UI 수동 확인 안내",
         "- python tools/harness_buddy.py character --character-only",
         "  캐릭터 중심 UI 실행",
+        "- python tools/harness_buddy.py model-info",
+        "  모델 provider 상태 확인",
+        "- python tools/harness_buddy.py model-info --model-provider hf",
+        "  Hugging Face provider 준비 상태 확인",
         "",
         "프로젝트 폴더에서:",
         "python tools/harness_buddy.py check",
         "python tools/harness_buddy.py evaluate-nudge",
+        "python tools/harness_buddy.py evaluate-nudge --model-provider hf",
         "python tools/harness_buddy.py state-json",
         "python tools/harness_buddy.py manual-check",
         "python tools/harness_buddy.py character --character-only",
+        "python tools/harness_buddy.py model-info",
+        "python tools/harness_buddy.py model-info --model-provider hf",
         "python scripts/check.py",
         "",
         "루트 폴더에서:",
         "python codex-harness-buddy\\tools\\harness_buddy.py check",
         "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
+        "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge --model-provider hf",
         "python codex-harness-buddy\\tools\\harness_buddy.py state-json",
         "python codex-harness-buddy\\tools\\harness_buddy.py manual-check",
         "python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
+        "python codex-harness-buddy\\tools\\harness_buddy.py model-info",
+        "python codex-harness-buddy\\tools\\harness_buddy.py model-info --model-provider hf",
         "python codex-harness-buddy\\scripts\\check.py",
         "",
         "보통은 이것부터 실행:",
@@ -150,6 +162,19 @@ def load_manual_check_summary() -> list[str]:
     ]
 
 
+def load_model_info_summary(provider: str = "rules") -> list[str]:
+    info = get_model_info(provider)
+    uses_model = "true" if info["uses_model"] else "false"
+    return [
+        "Codex Harness Buddy - model-info",
+        f"provider: {info['provider']}",
+        f"model: {info['model']}",
+        f"uses_model: {uses_model}",
+        f"status: {info['status']}",
+        f"note: {info['note']}",
+    ]
+
+
 def build_character_command(character_only: bool = False) -> list[str]:
     command = [sys.executable, str(CHARACTER_PATH)]
     if character_only:
@@ -171,9 +196,16 @@ def build_character_launch_summary(character_only: bool = False) -> list[str]:
     ]
 
 
-def run_character_ui(character_only: bool = False) -> int:
+def run_character_ui(character_only: bool = False, model_provider: str = "rules") -> int:
     print("\n".join(build_character_launch_summary(character_only)))
-    return subprocess.run(build_character_command(character_only)).returncode
+    return subprocess.run(
+        build_character_command(character_only),
+        env={
+            **os.environ,
+            "PYTHONIOENCODING": "utf-8",
+            "HARNESS_BUDDY_MODEL_PROVIDER": model_provider,
+        },
+    ).returncode
 
 
 def get_freshness_label(checked_at: str | None) -> str:
@@ -290,15 +322,15 @@ def load_prompt(mode: str, smoke_command: str) -> list[str]:
 
 
 def classify_nudge_with_rules(user_input: str) -> NudgeClassification:
-    return classify_intent(user_input)
+    return classify_intent(user_input, provider="rules")
 
 
-def classify_nudge(user_input: str) -> NudgeClassification:
-    return classify_nudge_with_rules(user_input)
+def classify_nudge(user_input: str, provider: str = "rules") -> NudgeClassification:
+    return classify_intent(user_input, provider=provider)
 
 
-def load_nudge_summary(user_input: str, state_path: Path) -> list[str]:
-    classification = classify_nudge(user_input)
+def load_nudge_summary(user_input: str, state_path: Path, model_provider: str = "rules") -> list[str]:
+    classification = classify_nudge(user_input, provider=model_provider)
     lines = [
         "Codex Harness Buddy - nudge",
         f"입력: {user_input}",
@@ -407,12 +439,17 @@ def run_project_check(state_path: Path) -> int:
     return 0
 
 
-def run_nudge_evaluation() -> int:
+def run_nudge_evaluation(model_provider: str = "rules") -> int:
     print("Codex Harness Buddy - evaluate-nudge")
-    print("평가 실행: python scripts/evaluate_nudge.py")
+    command_label = "python scripts/evaluate_nudge.py"
+    command = [sys.executable, str(EVALUATE_NUDGE_PATH)]
+    if model_provider != "rules":
+        command_label += f" --model-provider {model_provider}"
+        command.extend(["--model-provider", model_provider])
+    print(f"평가 실행: {command_label}")
 
     result = subprocess.run(
-        [sys.executable, str(EVALUATE_NUDGE_PATH)],
+        command,
         cwd=PROJECT_ROOT,
         env={**os.environ, "PYTHONIOENCODING": "utf-8"},
         text=True,
@@ -536,6 +573,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="character 명령에서 개발자 패널을 숨긴 캐릭터 중심 모드로 시작",
     )
+    parser.add_argument(
+        "--model-provider",
+        choices=["rules", "hf"],
+        default=os.environ.get("HARNESS_BUDDY_MODEL_PROVIDER", "rules"),
+        help="nudge, model-info, character 명령에 사용할 모델 provider",
+    )
     args = parser.parse_args()
 
     if args.command == "prompt":
@@ -545,7 +588,7 @@ def parse_args() -> argparse.Namespace:
         if not args.prompt_mode:
             parser.error("nudge 명령에는 자연어 입력이 필요합니다.")
     elif args.command and args.command not in COMMANDS:
-        parser.error("명령은 fast, careful, review, prompt, check, status, nudge, evaluate-nudge, state-json, manual-check, character, help 중 하나여야 합니다.")
+        parser.error("명령은 fast, careful, review, prompt, check, status, nudge, evaluate-nudge, state-json, manual-check, character, model-info, help 중 하나여야 합니다.")
     elif args.command == "character":
         if args.prompt_mode:
             parser.error("character 명령에는 두 번째 위치 인자를 사용할 수 없습니다.")
@@ -570,8 +613,12 @@ def main() -> int:
         print("\n".join(load_manual_check_summary()))
         return 0
 
+    if args.command == "model-info":
+        print("\n".join(load_model_info_summary(args.model_provider)))
+        return 0
+
     if args.command == "character":
-        return run_character_ui(args.character_only)
+        return run_character_ui(args.character_only, args.model_provider)
 
     if not harness_path.exists():
         print("HARNESS.md를 찾지 못했습니다.")
@@ -589,7 +636,7 @@ def main() -> int:
         return run_project_check(state_path)
 
     if args.command == "evaluate-nudge":
-        return run_nudge_evaluation()
+        return run_nudge_evaluation(args.model_provider)
 
     if args.command == "status":
         print("\n".join(load_status_summary(harness_path, state_path)))
@@ -603,7 +650,7 @@ def main() -> int:
         values = load_harness_values(harness_path)
         print("\n".join(load_prompt(args.prompt_mode, values["smoke_command"])))
     elif args.command == "nudge":
-        print("\n".join(load_nudge_summary(args.prompt_mode, state_path)))
+        print("\n".join(load_nudge_summary(args.prompt_mode, state_path, args.model_provider)))
     elif args.command:
         print("\n".join(load_mode_summary(harness_path, args.command, state_path)))
     else:

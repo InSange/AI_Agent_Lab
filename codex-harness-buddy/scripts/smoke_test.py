@@ -251,25 +251,37 @@ def check_help_command() -> bool:
         "  키워드 규칙으로 의도 추천",
         "- python tools/harness_buddy.py evaluate-nudge",
         "  nudge 분류 평가 실행",
+        "- python tools/harness_buddy.py evaluate-nudge --model-provider hf",
+        "  Hugging Face nudge 분류 평가 실행",
         "- python tools/harness_buddy.py state-json",
         "  캐릭터 UI용 상태 JSON 출력",
         "- python tools/harness_buddy.py manual-check",
         "  캐릭터 UI 수동 확인 안내",
         "- python tools/harness_buddy.py character --character-only",
         "  캐릭터 중심 UI 실행",
+        "- python tools/harness_buddy.py model-info",
+        "  모델 provider 상태 확인",
+        "- python tools/harness_buddy.py model-info --model-provider hf",
+        "  Hugging Face provider 준비 상태 확인",
         "프로젝트 폴더에서:",
         "python tools/harness_buddy.py check",
         "python tools/harness_buddy.py evaluate-nudge",
+        "python tools/harness_buddy.py evaluate-nudge --model-provider hf",
         "python tools/harness_buddy.py state-json",
         "python tools/harness_buddy.py manual-check",
         "python tools/harness_buddy.py character --character-only",
+        "python tools/harness_buddy.py model-info",
+        "python tools/harness_buddy.py model-info --model-provider hf",
         "python scripts/check.py",
         "루트 폴더에서:",
         "python codex-harness-buddy\\tools\\harness_buddy.py check",
         "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
+        "python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge --model-provider hf",
         "python codex-harness-buddy\\tools\\harness_buddy.py state-json",
         "python codex-harness-buddy\\tools\\harness_buddy.py manual-check",
         "python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
+        "python codex-harness-buddy\\tools\\harness_buddy.py model-info",
+        "python codex-harness-buddy\\tools\\harness_buddy.py model-info --model-provider hf",
         "python codex-harness-buddy\\scripts\\check.py",
         "보통은 이것부터 실행:",
         "프로젝트 폴더: python scripts/check.py",
@@ -313,6 +325,63 @@ def check_manual_check_command() -> bool:
         print("smoke test 실패: manual-check 명령 필수 출력이 누락되었습니다.")
         for text in missing:
             print(f"- {text}")
+        return False
+
+    return True
+
+
+def check_model_info_command() -> bool:
+    result = run_cli("model-info")
+
+    if result.returncode != 0:
+        print("smoke test 실패: model-info 명령이 0이 아닌 종료 코드를 반환했습니다.")
+        print(result.stderr.strip())
+        return False
+
+    output_lines = result.stdout.splitlines()
+    required_outputs = [
+        "Codex Harness Buddy - model-info",
+        "provider: rules",
+        "model: none",
+        "uses_model: false",
+        "status: ready",
+        "note: Hugging Face 모델은 아직 연결되지 않았습니다.",
+    ]
+    missing = [text for text in required_outputs if text not in output_lines]
+    if missing:
+        print("smoke test 실패: model-info 명령 필수 출력이 누락되었습니다.")
+        for text in missing:
+            print(f"- {text}")
+        return False
+
+    return True
+
+
+def check_hf_model_info_command() -> bool:
+    result = run_cli("model-info", "--model-provider", "hf")
+
+    if result.returncode != 0:
+        print("smoke test 실패: hf model-info 명령이 0이 아닌 종료 코드를 반환했습니다.")
+        print(result.stderr.strip())
+        return False
+
+    output_lines = result.stdout.splitlines()
+    required_outputs = [
+        "Codex Harness Buddy - model-info",
+        "provider: hf",
+        "model: MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",
+    ]
+    missing = [text for text in required_outputs if text not in output_lines]
+    if missing:
+        print("smoke test 실패: hf model-info 명령 필수 출력이 누락되었습니다.")
+        for text in missing:
+            print(f"- {text}")
+        return False
+    if not any(line.startswith("uses_model:") for line in output_lines):
+        print("smoke test 실패: hf model-info uses_model 출력이 누락되었습니다.")
+        return False
+    if not any(line.startswith("status:") for line in output_lines):
+        print("smoke test 실패: hf model-info status 출력이 누락되었습니다.")
         return False
 
     return True
@@ -385,13 +454,18 @@ def check_buddy_check_command() -> bool:
         "- model adapter smoke test: 모델 연결 준비용 의도 분류 어댑터 확인",
         "- character UI smoke test: 캐릭터 창 상태 표시와 조작 버튼 계약 확인",
         "- nudge 평가: 별도 실행 대상",
+        "- HF 모델 smoke test: 별도 실행 대상",
         "선택 검증",
         "프로젝트 폴더:",
         "- nudge 평가: python tools/harness_buddy.py evaluate-nudge",
+        "- HF nudge 평가: python tools/harness_buddy.py evaluate-nudge --model-provider hf",
+        "- HF 모델 smoke test: python scripts/hf_model_smoke_test.py",
         "- 캐릭터 UI 수동 확인: python tools/harness_buddy.py character --character-only",
         "- UI 수동 확인: python tools/buddy_ui.py",
         "루트 폴더:",
         "- nudge 평가: python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
+        "- HF nudge 평가: python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge --model-provider hf",
+        "- HF 모델 smoke test: python codex-harness-buddy\\scripts\\hf_model_smoke_test.py",
         "- 캐릭터 UI 수동 확인: python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
         "- UI 수동 확인: python codex-harness-buddy\\tools\\buddy_ui.py",
         "다음 확인: 캐릭터 창은 필요 시 직접 실행해 버튼과 상태 표시를 확인",
@@ -459,7 +533,7 @@ def check_evaluate_nudge_command() -> bool:
         "분류기: rules",
         "분류 방식: 키워드 규칙",
         "모델 사용: 없음",
-        "정확도: 10/10",
+        "정확도: 20/20",
     ]
     missing = [text for text in required_outputs if text not in output_lines]
     if missing:
@@ -825,6 +899,8 @@ def main() -> int:
         check_prompt_modes,
         check_help_command,
         check_manual_check_command,
+        check_model_info_command,
+        check_hf_model_info_command,
         check_character_command_contract,
         check_buddy_check_command,
         check_evaluate_nudge_command,

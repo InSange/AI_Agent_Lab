@@ -21,6 +21,24 @@ def load_model_adapter_module():
 def main() -> int:
     module = load_model_adapter_module()
 
+    if module.MODEL_PROVIDER != "rules":
+        print("model adapter smoke test 실패: 기본 provider가 rules가 아닙니다.")
+        return 1
+
+    model_info = module.get_model_info()
+    expected_info = {
+        "provider": "rules",
+        "model": "none",
+        "uses_model": False,
+        "status": "ready",
+        "note": "Hugging Face 모델은 아직 연결되지 않았습니다.",
+    }
+    if model_info != expected_info:
+        print("model adapter smoke test 실패: model info가 예상과 다릅니다.")
+        print(f"- 기대: {expected_info}")
+        print(f"- 실제: {model_info}")
+        return 1
+
     checks = [
         ("빨리 해줘", "fast", "python tools/harness_buddy.py prompt fast"),
         ("조심해서 해줘", "careful", "python tools/harness_buddy.py prompt careful"),
@@ -30,7 +48,7 @@ def main() -> int:
     ]
 
     for user_input, expected_intent, expected_command in checks:
-        result = module.classify_intent(user_input)
+        result = module.classify_intent(user_input, provider="rules")
         if result.intent != expected_intent:
             print("model adapter smoke test 실패: intent가 예상과 다릅니다.")
             print(f"- 입력: {user_input}")
@@ -46,6 +64,26 @@ def main() -> int:
         if result.uses_model:
             print("model adapter smoke test 실패: 초기 어댑터는 모델을 사용하지 않아야 합니다.")
             return 1
+        if result.confidence is not None:
+            print("model adapter smoke test 실패: rules provider confidence는 없어야 합니다.")
+            return 1
+
+    hf_info = module.get_model_info("hf")
+    if hf_info["provider"] != "hf":
+        print("model adapter smoke test 실패: hf provider 정보가 예상과 다릅니다.")
+        return 1
+    if hf_info["model"] != module.HF_MODEL_ID:
+        print("model adapter smoke test 실패: hf 모델 ID가 예상과 다릅니다.")
+        return 1
+    if hf_info["status"] not in ["ready", "missing_dependencies"]:
+        print("model adapter smoke test 실패: hf provider 상태가 예상 범위가 아닙니다.")
+        print(f"- 실제: {hf_info['status']}")
+        return 1
+
+    unknown_result = module.classify_intent("빨리 해줘", provider="unknown")
+    if unknown_result.method != "알 수 없는 provider" or unknown_result.uses_model:
+        print("model adapter smoke test 실패: 알 수 없는 provider 응답이 예상과 다릅니다.")
+        return 1
 
     print("model adapter smoke test 성공")
     return 0

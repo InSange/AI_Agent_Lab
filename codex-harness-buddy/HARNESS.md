@@ -33,21 +33,21 @@ Codex IDE에서 호출 가능한 한국어 터미널 하네스 버디를 만든�
 ### Hugging Face 모델 ID
 
 ```text
-현재 미사용
+MoritzLaurer/mDeBERTa-v3-base-mnli-xnli
 ```
 
-초기 버전은 Hugging Face 모델 없이 표준 Python CLI로 만든다. 이후 감정 분석, 로그 요약, 캐릭터 반응 생성 등이 필요해지면 Hugging Face 모델 도입을 검토한다.
+기본 실행은 Hugging Face 모델 없이 표준 Python CLI와 규칙 기반 분류로 동작한다. `--model-provider hf`를 명시한 선택 실행에서만 Hugging Face zero-shot 분류 모델을 사용한다.
 
 ### 태스크 유형
 
 ```text
-현재 미사용
+zero-shot-classification
 ```
 
 ### 모델 라이선스
 
 ```text
-현재 미사용
+모델 카드 기준 확인 필요
 ```
 
 ### 실행 요구사항
@@ -55,15 +55,21 @@ Codex IDE에서 호출 가능한 한국어 터미널 하네스 버디를 만든�
 ```text
 Python: TBD
 CPU/GPU: CPU
-VRAM: 필요 없음
-주요 패키지: 초기 버전은 표준 라이브러리 우선
-대략적인 모델 크기: 해당 없음
+VRAM: 기본 실행은 필요 없음, HF 선택 실행은 CPU 우선
+주요 패키지: 기본 실행은 표준 라이브러리, HF 선택 실행은 transformers/torch
+대략적인 모델 크기: 외부 Hugging Face 캐시에 저장되며 Git에 포함하지 않음
+```
+
+HF 선택 실행 의존성은 다음 파일에만 분리해 기록한다.
+
+```text
+requirements-hf.txt
 ```
 
 ### 모델 다운로드 정책
 
-- 초기 버전에서는 모델 다운로드를 하지 않는다.
-- Hugging Face 모델을 도입하려면 모델 ID, 용량, 라이선스, 저장 위치, 목적을 사용자에게 보고하고 승인받는다.
+- 기본 `scripts/check.py`에서는 모델 다운로드를 하지 않는다.
+- Hugging Face 모델은 `--model-provider hf` 또는 `scripts/hf_model_smoke_test.py`를 실행할 때만 로딩한다.
 - 모델 캐시, 가중치, 데이터셋은 Git에 포함하지 않는다.
 
 ### nudge 모델 기반 분류 도입 기준
@@ -79,7 +85,7 @@ Hugging Face 모델 기반 `nudge` 분류기는 다음 기준을 먼저 만족�
 - 모델 캐시, 가중치, 데이터셋은 저장소에 포함하지 않는다.
 - 도입 전 규칙 기반 분류와 동일한 입력 샘플로 비교하는 smoke test 계획을 세운다.
 
-모델 후보를 검토하더라도 다운로드, 의존성 설치, 코드 연결은 별도 승인 후 진행한다.
+HF provider는 실패 시 규칙 기반 fallback을 사용한다. 또한 HF confidence가 낮고 rules provider가 `careful` 또는 `review` 같은 안전한 의도를 감지하면 rules guard로 보정한다. 모델 후보 변경, 추가 의존성 변경, 대형 모델 교체는 별도 승인 후 진행한다.
 
 ### nudge 평가 샘플
 
@@ -88,14 +94,24 @@ Hugging Face 모델 기반 `nudge` 분류기는 다음 기준을 먼저 만족�
 ```text
 빨리 해줘 -> fast
 대충 빨리 가자 -> fast
+빨리 끝내줘 -> fast
+후딱 가자 -> fast
 조심해서 해줘 -> careful
 좀 불안한데 -> careful
+천천히 확인해줘 -> careful
+위험한 부분 다시 봐줘 -> careful
 검증해줘 -> check
 테스트 돌려 -> check
+돌려보고 말해줘 -> check
+테스트 한번만 해줘 -> check
 상태 보여줘 -> status
 지금 상태 어때 -> status
+지금 어디까지 됐어? -> status
+현재 진행상황 알려줘 -> status
 마무리해도 돼? -> review
 이거 믿어도 돼? -> review
+끝내도 괜찮아? -> review
+마지막으로 한번 봐줘 -> review
 ```
 
 모델 기반 분류 후보는 다음 애매한 입력을 `careful`, `review`, `unknown` 중 어떻게 다루는지도 비교한다.
@@ -112,9 +128,10 @@ Hugging Face 모델 기반 `nudge` 분류기는 다음 기준을 먼저 만족�
 
 ```powershell
 python tools/harness_buddy.py evaluate-nudge
+python tools/harness_buddy.py evaluate-nudge --model-provider hf
 ```
 
-현재 `evaluate-nudge`는 내부에서 `scripts/evaluate_nudge.py`를 실행하며, 전체 `scripts/check.py` 파이프라인에는 포함하지 않는다.
+현재 `evaluate-nudge`는 내부에서 `scripts/evaluate_nudge.py`를 실행하며, 전체 `scripts/check.py` 파이프라인에는 포함하지 않는다. HF provider 평가는 각 샘플의 `confidence`를 함께 출력한다. 현재 HF 모델은 라벨 문구와 rules guard를 적용해 확장 샘플 20개에서 `20/20`을 목표로 한다. 이후 샘플을 늘리면 이 결과를 다음 모델 라벨/threshold 개선의 기준 데이터로 사용한다.
 
 ## 3. 입력/출력 계약
 
@@ -147,11 +164,15 @@ python tools/harness_buddy.py prompt careful
 python tools/harness_buddy.py prompt review
 python tools/harness_buddy.py check --state-path tmp\smoke_buddy_state.json
 python tools/harness_buddy.py nudge "빨리 좀 해"
+python tools/harness_buddy.py nudge "검증해줘" --model-provider hf
+python tools/harness_buddy.py model-info --model-provider hf
 ```
 
 `help` 명령은 프로젝트 폴더 기준 명령과 루트 폴더 기준 명령을 나눠 안내하고, 보통 먼저 실행할 check 명령도 위치별로 표시한다.
 
 `manual-check` 명령은 전체 검증을 실행하지 않고 캐릭터 UI 실행 명령, Nudge 예시, Check 실행 중 표시, Preview 복귀 확인 항목만 출력한다.
+
+`model-info` 명령은 현재 모델 provider 상태를 출력한다. 기본 provider는 `rules`이고, `--model-provider hf`를 지정하면 Hugging Face provider 준비 상태를 출력한다.
 
 `state-json` 명령은 캐릭터 UI가 읽을 수 있는 상태 스냅샷을 JSON으로 출력한다.
 
@@ -195,8 +216,8 @@ Buddy는 루트 `AGENTS.md`의 승인 규칙을 우선한다.
 승인 필요: 파일/폴더 변경, 의존성/가상환경 변경, 모델/데이터 다운로드, Git 작업, 토큰/환경 변수 변경
 ```
 
-`nudge` 명령은 짧은 자연어 입력을 모델 어댑터를 통해 `fast`, `careful`, `review`, `check`, `status` 의도 중 하나에 매핑하고 다음 명령을 안내한다. 현재 어댑터는 키워드 규칙 기반이다. `review` 계열 의도는 상태 파일을 함께 확인해 최신/오래됨/실패 상태에 따라 추천을 조정한다.
-현재 `nudge`는 Hugging Face 모델이나 AI 자연어 처리 모델을 사용하지 않고, 추천 명령을 실제로 실행하지 않는다. 출력에는 `분류 방식: 키워드 규칙`, `모델 사용: 없음`, `실행 여부: 추천만 함`을 표시한다.
+`nudge` 명령은 짧은 자연어 입력을 모델 어댑터를 통해 `fast`, `careful`, `review`, `check`, `status` 의도 중 하나에 매핑하고 다음 명령을 안내한다. 기본 어댑터는 키워드 규칙 기반이다. `--model-provider hf`를 지정하면 Hugging Face zero-shot 분류를 사용하고, 실패하면 rules fallback으로 돌아간다. HF confidence가 낮고 rules가 `careful` 또는 `review`를 감지한 경우에는 rules guard로 보정한다. `review` 계열 의도는 상태 파일을 함께 확인해 최신/오래됨/실패 상태에 따라 추천을 조정한다.
+현재 `nudge`는 추천 명령을 실제로 실행하지 않는다. 출력에는 `분류 방식`, `모델 사용`, `실행 여부: 추천만 함`을 표시한다.
 내부 분류 결과는 `tools/buddy_model_adapter.py`의 `IntentClassification`으로 표현한다. 이후 모델 기반 분류를 도입하더라도 출력 계약은 이 결과 객체를 통해 유지한다.
 초기 규칙은 `빨리`, `대충`, `조심`, `불안`, `마무리`, `믿어도`, `테스트`, `되는지`, `상태`, `어때` 같은 표현을 다룬다.
 
@@ -252,9 +273,9 @@ python scripts/check.py
 
 현재 전체 검증은 CLI 기본 실행, smoke test, UI smoke test, model adapter smoke test, character UI smoke test를 실행한다.
 성공 시 `검증 요약` 섹션에서 각 단계가 무엇을 확인했는지 짧게 출력한다.
-`선택 검증` 섹션에는 nudge 평가, 캐릭터 UI 수동 확인, 기존 UI 수동 확인 명령을 프로젝트 폴더 기준과 루트 폴더 기준으로 나눠 표시한다.
+`선택 검증` 섹션에는 nudge 평가, HF 모델 smoke test, 캐릭터 UI 수동 확인, 기존 UI 수동 확인 명령을 프로젝트 폴더 기준과 루트 폴더 기준으로 나눠 표시한다.
 `수동 확인` 섹션은 `[레이아웃]`, `[상호작용]`, `[Preview]` 그룹으로 나눠 출력한다. 각 그룹에는 Review 후 Nudge 입력창 표시, 예시 입력 버튼 의미, Check 실행 중 얼굴과 라벨의 `검증 중` 변경 확인, 예시 입력 후 Nudge 결과 표시, Nudge 입력에 따른 `빠르게`/`신중하게`/`검증 준비` 라벨 변경 확인, Nudge/Check 반응 라벨 최소 표시 체감 확인, `항상 위` 체크/해제 시 창 z축 동작 확인, `Waiting`/`Needs Review` 프리뷰의 얼굴, 라벨, 반응 문구 변경 확인, Preview 확인 후 `Refresh`로 실제 상태 복귀, Preview 안내 문구 확인 항목을 배치한다.
-`evaluate-nudge`는 아직 전체 검증에 포함하지 않고 별도 실행 대상으로 안내한다.
+`evaluate-nudge`, `evaluate-nudge --model-provider hf`, `hf_model_smoke_test.py`는 아직 전체 검증에 포함하지 않고 별도 실행 대상으로 안내한다.
 
 ### 모델 어댑터 하네스
 
@@ -262,7 +283,15 @@ python scripts/check.py
 python scripts/model_adapter_smoke_test.py
 ```
 
-`tools/buddy_model_adapter.py`는 미래의 Hugging Face 모델 연결 지점이다. 현재 구현은 표준 라이브러리만 사용하며, 키워드 규칙으로 `fast`, `careful`, `review`, `check`, `status` 의도와 다음 명령을 반환한다. Buddy CLI와 캐릭터 Nudge 반응은 같은 어댑터 결과를 사용한다. 실제 모델 다운로드, 의존성 설치, 모델 추론 연결은 별도 승인 후 진행한다.
+`tools/buddy_model_adapter.py`는 Hugging Face 모델 연결 지점이다. 기본 provider는 `rules`이며 표준 라이브러리만 사용하고, 키워드 규칙으로 `fast`, `careful`, `review`, `check`, `status` 의도와 다음 명령을 반환한다. `hf` provider는 `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli` zero-shot 분류를 사용하고, 실패하면 rules fallback을 반환한다. confidence가 낮은 안전 의도는 rules guard로 보정한다. Buddy CLI와 캐릭터 Nudge 반응은 같은 어댑터 결과를 사용한다.
+
+모델 provider 상태는 다음 명령으로 확인한다.
+
+```powershell
+python tools/harness_buddy.py model-info
+python tools/harness_buddy.py model-info --model-provider hf
+python scripts/hf_model_smoke_test.py
+```
 
 ### 캐릭터 상태 하네스
 
@@ -299,7 +328,7 @@ python tools/harness_buddy.py character --character-only
 다음 코드 단계의 분리 대상은 상태별 얼굴/라벨/반응 매핑, `state-json` 스냅샷을 view model로 바꾸는 함수, Preview view model, Check 실행 중 view model, Nudge 반응 view model이다.
 `tkinter` 창 생성, 버튼 배치, subprocess 실행, 스레드와 `after` 처리는 기존 UI 파일에 남긴다.
 분리 후에도 `python scripts/character_ui_smoke_test.py`와 `python scripts/check.py`가 통과해야 하며, 사용자 눈에 보이는 UI 동작은 바꾸지 않는다.
-상태별 Buddy 반응 문구는 고정 규칙 기반으로 표시한다. 현재는 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다.
+상태별 Buddy 반응 문구는 고정 규칙 기반으로 표시한다. Nudge 의도 분류는 기본적으로 rules provider를 쓰며, `character --model-provider hf`로 실행하면 캐릭터 Nudge 경로에도 HF provider가 전달된다. 자연어 생성 모델은 아직 사용하지 않는다.
 `Preview` 버튼은 상태별 얼굴, 라벨, 반응 문구를 화면에서만 미리 보여준다. 실제 `buddy_state.json`은 수정하지 않으며, `Refresh`를 누르면 실제 상태로 돌아온다. UI에는 `표시만 바뀜 · Refresh로 복귀` 안내를 함께 표시한다.
 캐릭터 창 버튼은 `검증`, `명령`, `Nudge`, `예시 입력`, `Preview 확인` 영역으로 나눠 표시한다.
 `Check` 버튼은 백그라운드 스레드에서 `harness_buddy.py check`를 실행한 뒤 상태를 다시 읽어 표시를 갱신한다. 실행 중에는 얼굴 `(o_o)`, 라벨 `검증 중`, 반응 문구 `검증을 돌리고 있어요.`를 표시하고, 중복 클릭과 동시 갱신을 막기 위해 조작 버튼을 비활성화한다. 실행 중 반응은 최소 0.8초 동안 표시한다.
@@ -310,7 +339,7 @@ Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
 `확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview 수동 확인 항목을 UI용 짧은 요약으로 표시한다.
-`Nudge` 버튼은 입력 직후 모델 어댑터의 의도 분류 결과로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `fast`는 `빠르게`, `careful`은 `신중하게`, `check`는 `검증 준비`, `status`는 `상태 확인`, `review`는 `점검 준비`로 표시한다. 이 반응은 화면 피드백이며 Hugging Face 모델이나 자연어 생성 모델을 사용하지 않는다. Nudge 반응은 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
+`Nudge` 버튼은 입력 직후 모델 어댑터의 의도 분류 결과로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `fast`는 `빠르게`, `careful`은 `신중하게`, `check`는 `검증 준비`, `status`는 `상태 확인`, `review`는 `점검 준비`로 표시한다. 기본 실행은 rules provider이며, HF provider는 명시적으로 지정했을 때만 사용한다. Nudge 반응은 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
 결과 문구 영역은 고정 높이를 사용해 긴 결과가 Nudge 입력 영역을 밀어내지 않게 한다.
 `예시 입력` 영역의 Nudge 예시 버튼은 입력창에 예시 문장만 채우며 자동 실행하지 않는다. 실제 해석은 사용자가 `Nudge` 버튼을 눌렀을 때 실행한다.
 아직 이미지/sprite, 애니메이션은 구현하지 않는다.
@@ -509,6 +538,14 @@ TBD
 작업 로그는 최신 항목을 위에 추가한다.
 
 ```text
+2026-05-20
+- 작업자: Codex
+- 요청: Hugging Face 연결 준비용 provider 구조와 model-info 추가
+- 변경 파일: tools/buddy_model_adapter.py, tools/harness_buddy.py, scripts/model_adapter_smoke_test.py, scripts/smoke_test.py, README.md, HARNESS.md
+- 실행한 검증: python codex-harness-buddy\tools\harness_buddy.py model-info, python codex-harness-buddy\scripts\model_adapter_smoke_test.py, python codex-harness-buddy\scripts\smoke_test.py, python codex-harness-buddy\scripts\check.py, 개인 경로/토큰 문자열 검색
+- 결과: 완료
+- 남은 이슈: 실제 Hugging Face 모델 다운로드, 의존성 설치, 모델 추론 연결은 아직 미진행
+
 2026-05-20
 - 작업자: Codex
 - 요청: 캐릭터 Nudge 반응을 모델 어댑터 결과와 연결

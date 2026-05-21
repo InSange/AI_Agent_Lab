@@ -17,7 +17,7 @@ Codex Harness Buddy는 Codex IDE에서 호출해 사용할 수 있는 한국어 
 ```text
 단계: 초기 세팅
 구현 코드: 최소 CLI와 smoke test 구현됨
-의존성: 표준 라이브러리만 사용
+의존성: 기본 실행은 표준 라이브러리만 사용, HF 선택 검증은 transformers/torch 사용
 ```
 
 ## 실행 형태
@@ -62,6 +62,27 @@ python tools/harness_buddy.py check
 `check` 명령은 마지막 검증 결과, 검증 시각, 실패 시 요약을 `buddy_state.json`에 저장한다. 이 파일은 로컬 실행 상태이므로 Git에 포함하지 않는다.
 테스트나 별도 도구에서는 `--state-path`로 상태 파일을 분리할 수 있다.
 
+모델 provider 상태는 다음 명령으로 확인한다.
+
+```powershell
+python tools/harness_buddy.py model-info
+```
+
+현재 provider는 `rules`이고, `hf` provider는 아직 연결하지 않았다. 이 명령은 실제 모델 다운로드나 의존성 설치 없이 현재 모델 연결 상태만 출력한다.
+
+Hugging Face provider 준비 상태는 다음 명령으로 확인한다.
+
+```powershell
+python tools/harness_buddy.py model-info --model-provider hf
+```
+
+`hf` provider는 `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli` zero-shot 분류 모델을 선택 실행 경로로 사용한다. 기본 `check.py`에는 모델 다운로드와 추론을 포함하지 않으며, 실제 모델 로딩은 별도 smoke test에서만 확인한다.
+새 환경에서 HF 선택 실행을 쓰려면 승인 후 다음 의존성을 설치한다.
+
+```powershell
+python -m pip install -r requirements-hf.txt
+```
+
 마지막 검증 상태는 다음 명령으로 확인한다.
 
 ```powershell
@@ -88,7 +109,7 @@ python scripts/character_engine_smoke_test.py
 
 `tools/buddy_character_engine.py`는 상태별 얼굴, 라벨, 반응 문구, 캐릭터 mood, mood별 ASCII frame과 Preview/Check/Nudge 표시 모델을 담당한다. `mood`와 ASCII frame은 이후 sprite나 애니메이션을 고를 때 사용할 캐릭터화 하네스다. 현재 캐릭터 UI에는 작은 디버그 라벨로 mood를 표시하고, 얼굴은 0.9초 간격으로 mood별 ASCII frame을 순환한다. `tools/buddy_character.py`는 같은 폴더의 엔진 모듈을 import해 `tkinter` 창, 버튼, subprocess 실행, 스레드 처리를 담당한다.
 
-`tools/buddy_model_adapter.py`는 nudge 의도 분류를 담당하는 모델 연결 준비용 어댑터다. 현재는 표준 라이브러리와 키워드 규칙만 사용하며, Hugging Face 모델이나 추가 의존성은 아직 사용하지 않는다. Buddy CLI와 캐릭터 Nudge 반응은 같은 어댑터 결과를 사용한다.
+`tools/buddy_model_adapter.py`는 nudge 의도 분류를 담당하는 모델 어댑터다. 기본 provider는 `rules`이며 표준 라이브러리와 키워드 규칙만 사용한다. 선택 provider인 `hf`는 Hugging Face zero-shot 분류 모델을 사용하고, 실패하면 규칙 기반 fallback으로 돌아간다. Buddy CLI와 캐릭터 Nudge 반응은 같은 어댑터 결과를 사용한다.
 
 최소 캐릭터 창은 다음 명령으로 실행한다.
 
@@ -116,7 +137,7 @@ Check 실행 결과는 상태 메시지와 별도의 문구로 표시한다.
 `Status`, `Review`, `Fast`, `Careful`, `Nudge` 버튼은 캐릭터 창에서 바로 Buddy CLI 명령을 실행하고 결과 문구를 갱신한다.
 결과 문구는 버튼별로 핵심 줄을 최대 2줄까지 표시한다. `Status`는 마지막 검증과 검증 상태, `Review`는 다음 행동과 마지막 검증, `Fast`와 `Careful`은 Buddy 지시문, `Nudge`는 다음 명령과 감지된 의도를 우선 보여준다.
 `확인 항목` 버튼은 `manual-check`를 실행하고 Nudge, Check, Preview에서 직접 확인할 내용을 짧게 보여준다.
-`Nudge` 버튼은 입력 직후 모델 어댑터의 의도 분류 결과로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `fast`는 `빠르게`, `careful`은 `신중하게`, `check`는 `검증 준비`, `status`는 `상태 확인`, `review`는 `점검 준비`로 표시한다. 이 반응은 UI 피드백이며 Hugging Face 모델을 사용하지 않는다. Nudge 반응도 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
+`Nudge` 버튼은 입력 직후 모델 어댑터의 의도 분류 결과로 캐릭터 얼굴과 라벨을 잠깐 바꾼다. `fast`는 `빠르게`, `careful`은 `신중하게`, `check`는 `검증 준비`, `status`는 `상태 확인`, `review`는 `점검 준비`로 표시한다. 기본 실행은 규칙 기반이며, `character --model-provider hf`로 실행하면 Nudge 분류에 HF provider를 전달한다. Nudge 반응도 결과 요약이 너무 빨리 덮어쓰지 않도록 최소 0.8초 동안 유지한다.
 결과 문구 영역은 고정 높이를 사용해 긴 결과가 Nudge 입력 영역을 밀어내지 않게 한다.
 `예시 입력` 영역의 Nudge 예시 버튼은 입력창에 예시 문장만 채우며 자동 실행하지 않는다. 실제 해석은 사용자가 `Nudge` 버튼을 눌렀을 때 실행한다.
 
@@ -171,8 +192,14 @@ python tools/harness_buddy.py nudge "테스트 돌려"
 python tools/harness_buddy.py nudge "상태 보여줘"
 ```
 
-초기 버전은 Hugging Face 모델 없이 어댑터 내부의 키워드 규칙으로만 분류한다. 출력에는 `분류 방식: 키워드 규칙`, `모델 사용: 없음`, `실행 여부: 추천만 함`을 표시한다.
-모델 기반 의도 분류는 아직 미구현이며, 도입 기준과 평가 샘플은 `HARNESS.md`에 기록한다. 실제 모델 연결은 이 어댑터의 내부 구현을 교체하는 방식으로 진행한다.
+기본 버전은 어댑터 내부의 키워드 규칙으로 분류한다. 출력에는 `분류 방식: 키워드 규칙`, `모델 사용: 없음`, `실행 여부: 추천만 함`을 표시한다.
+HF 모델 기반 의도 분류는 선택 실행으로 연결되어 있으며, 다음처럼 명시적으로 provider를 지정할 때만 사용한다.
+
+```powershell
+python tools/harness_buddy.py nudge "검증해줘" --model-provider hf
+```
+
+HF provider는 실패 시 규칙 기반 fallback을 사용한다. 또한 HF confidence가 낮고 rules provider가 `careful` 또는 `review` 같은 안전한 의도를 감지하면 rules guard로 보정한다.
 
 nudge 분류 평가 하네스는 다음 명령으로 별도 실행한다.
 
@@ -180,7 +207,22 @@ nudge 분류 평가 하네스는 다음 명령으로 별도 실행한다.
 python tools/harness_buddy.py evaluate-nudge
 ```
 
+HF provider의 분류 품질은 같은 하네스에 provider를 지정해 확인한다.
+
+```powershell
+python tools/harness_buddy.py evaluate-nudge --model-provider hf
+```
+
+평가 출력은 각 샘플의 예측 의도와 `confidence`를 함께 보여준다. 현재 HF provider는 라벨 문구와 rules guard를 적용해 확장 평가 샘플 20개에서 `20/20`을 목표로 한다. 이후 샘플을 늘리면 이 결과를 다음 모델 라벨/threshold 개선의 기준으로 사용한다.
 현재 이 평가는 전체 `check.py` 파이프라인에는 포함하지 않는다.
+
+HF 모델 로딩과 단일 입력 분류는 다음 선택 smoke test로 확인한다.
+
+```powershell
+python scripts/hf_model_smoke_test.py
+```
+
+이 명령은 모델 다운로드나 캐시 접근이 필요할 수 있으므로 기본 `check.py`에는 포함하지 않는다.
 
 ## 플로팅 Buddy UI 계획
 

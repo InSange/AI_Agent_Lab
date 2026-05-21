@@ -23,16 +23,21 @@ CHECK_SUMMARY = [
     "- character engine smoke test: 캐릭터 상태/반응 표시 모델 확인",
     "- character UI smoke test: 캐릭터 창 상태 표시와 조작 버튼 계약 확인",
     "- nudge 평가: 별도 실행 대상",
+    "- HF 모델 smoke test: 별도 실행 대상",
 ]
 
 PROJECT_OPTIONAL_CHECKS = [
     "- nudge 평가: python tools/harness_buddy.py evaluate-nudge",
+    "- HF nudge 평가: python tools/harness_buddy.py evaluate-nudge --model-provider hf",
+    "- HF 모델 smoke test: python scripts/hf_model_smoke_test.py",
     "- 캐릭터 UI 수동 확인: python tools/harness_buddy.py character --character-only",
     "- UI 수동 확인: python tools/buddy_ui.py",
 ]
 
 ROOT_OPTIONAL_CHECKS = [
     "- nudge 평가: python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge",
+    "- HF nudge 평가: python codex-harness-buddy\\tools\\harness_buddy.py evaluate-nudge --model-provider hf",
+    "- HF 모델 smoke test: python codex-harness-buddy\\scripts\\hf_model_smoke_test.py",
     "- 캐릭터 UI 수동 확인: python codex-harness-buddy\\tools\\harness_buddy.py character --character-only",
     "- UI 수동 확인: python codex-harness-buddy\\tools\\buddy_ui.py",
 ]
